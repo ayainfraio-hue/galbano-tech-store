@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Storefront is front-end only: catalog lives in `src/data/catalog.ts`, cart in `src/lib/cart.tsx` (localStorage). No backend until the owner asks for one.
+- Orders are sent by WhatsApp link built in `src/lib/whatsapp.ts`; keep message/number logic there so `src/test/whatsapp-order.test.ts` covers it.
+- Price formatting/display rules live in `src/lib/pricing.ts`; components must not compute payment terms themselves.
