@@ -52,30 +52,30 @@ function AuthPage() {
     });
   }, [navigate, redirect]);
 
-  async function submit(e: FormEvent) {
+  async function submit(e: FormEvent): Promise<void> {
     e.preventDefault();
     setNotice(null);
     if (mode === "forgot") {
       const parsed = credentials.shape.email.safeParse(email);
-      if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+      if (!parsed.success) return void toast.error(parsed.error.issues[0]?.message);
       setBusy(true);
       const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       setBusy(false);
-      if (error) return toast.error("Não foi possível enviar o e-mail", { description: error.message });
+      if (error) return void toast.error("Não foi possível enviar o e-mail", { description: error.message });
       setNotice("Se o e-mail estiver cadastrado, você receberá um link para criar uma nova senha.");
       return;
     }
 
     const parsed = credentials.safeParse({ email, password });
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (!parsed.success) return void toast.error(parsed.error.issues[0]?.message);
     setBusy(true);
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword(parsed.data);
       setBusy(false);
       if (error) {
-        return toast.error("Não foi possível entrar", {
+        return void toast.error("Não foi possível entrar", {
           description: /confirm/i.test(error.message) ? "Confirme seu e-mail pelo link enviado antes de entrar." : "E-mail ou senha incorretos.",
         });
       }
@@ -86,7 +86,7 @@ function AuthPage() {
         options: { emailRedirectTo: `${window.location.origin}/admin` },
       });
       setBusy(false);
-      if (error) return toast.error("Não foi possível criar a conta", { description: error.message });
+      if (error) return void toast.error("Não foi possível criar a conta", { description: error.message });
       if (data.session) {
         navigate({ to: "/admin", replace: true });
       } else {

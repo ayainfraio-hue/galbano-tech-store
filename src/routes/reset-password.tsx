@@ -29,13 +29,13 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function submit(e: FormEvent) {
+  async function submit(e: FormEvent): Promise<void> {
     e.preventDefault();
-    if (password.length < 8) return toast.error("A senha precisa ter pelo menos 8 caracteres");
+    if (password.length < 8) return void toast.error("A senha precisa ter pelo menos 8 caracteres");
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
     setBusy(false);
-    if (error) return toast.error("Não foi possível salvar a senha", { description: "Abra novamente o link enviado por e-mail." });
+    if (error) return void toast.error("Não foi possível salvar a senha", { description: "Abra novamente o link enviado por e-mail." });
     toast.success("Senha atualizada");
     navigate({ to: "/admin", replace: true });
   }

@@ -51,7 +51,7 @@ export function CheckoutDialog({
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string | undefined; phone?: string | undefined }>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<{ number: number; url: string } | null>(null);
   const { total } = orderTotals(items);
@@ -163,7 +163,7 @@ export function CheckoutDialog({
             </div>
             <div className="mt-5 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm">
               <span className="text-muted-foreground">
-                {items.reduce((s, i) => s + i.quantity, 0)} {items.length === 1 && items[0].quantity === 1 ? "item" : "itens"}
+                {items.reduce((s, i) => s + i.quantity, 0)} {items.length === 1 && items[0]?.quantity === 1 ? "item" : "itens"}
               </span>
               <span className="font-display text-lg font-bold text-gold-gradient">{formatBRL(total)}</span>
             </div>

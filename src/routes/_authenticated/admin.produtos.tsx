@@ -182,7 +182,7 @@ function toForm(p: ProductRow | null): FormState {
   const specs = Array.isArray(p?.specs) ? (p!.specs as [string, string][]).map(([k, v]) => `${k}: ${v}`).join("\n") : "";
   return {
     name: p?.name ?? "", slug: p?.slug ?? "", brand: p?.brand ?? "", sku: p?.sku ?? "",
-    category: p?.category ?? categories[0].slug, price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "",
+    category: p?.category ?? categories[0]?.slug ?? "smartphones", price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "",
     stock: p ? String(p.stock) : "0", min_stock: p ? String(p.min_stock) : "3", badge: p?.badge ?? "",
     short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: p?.image_url ?? "",
     sort_order: p ? String(p.sort_order) : "100", specs, tags: (p?.tags ?? []) as ProductTag[], active: p?.active ?? true,
@@ -192,10 +192,13 @@ function toForm(p: ProductRow | null): FormState {
 function parseSpecs(text: string): [string, string][] {
   return text
     .split("\n")
-    .map((line) => line.split(/:(.*)/s).map((s) => s.trim()))
+    .map((line) => {
+      const idx = line.indexOf(":");
+      return idx > 0 ? [line.slice(0, idx).trim(), line.slice(idx + 1).trim()] : ["", ""];
+    })
     .filter(([k, v]) => k && v)
     .slice(0, 30)
-    .map(([k, v]) => [k.slice(0, 60), v.slice(0, 200)] as [string, string]);
+    .map(([k = "", v = ""]) => [k.slice(0, 60), v.slice(0, 200)] as [string, string]);
 }
 
 function ProductForm({ product, onClose }: { product: ProductRow | "new" | null; onClose: () => void }) {
@@ -215,28 +218,28 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }));
 
-  async function upload(file: File) {
-    if (!file.type.startsWith("image/")) return toast.error("Escolha um arquivo de imagem");
-    if (file.size > 5 * 1024 * 1024) return toast.error("A imagem deve ter até 5 MB");
+  async function upload(file: File): Promise<void> {
+    if (!file.type.startsWith("image/")) return void toast.error("Escolha um arquivo de imagem");
+    if (file.size > 5 * 1024 * 1024) return void toast.error("A imagem deve ter até 5 MB");
     setUploading(true);
     const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const path = `products/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
     if (error) {
       setUploading(false);
-      return toast.error("Falha ao enviar a imagem");
+      return void toast.error("Falha ao enviar a imagem");
     }
     // Pasta privada: geramos um link assinado de longa duração para exibir na loja.
     const { data, error: signError } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
     setUploading(false);
-    if (signError || !data) return toast.error("Falha ao gerar o link da imagem");
+    if (signError || !data) return void toast.error("Falha ao gerar o link da imagem");
     set("image_url", data.signedUrl);
   }
 
   const save = useMutation({
     mutationFn: async () => {
       const parsed = formSchema.safeParse(form);
-      if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+      if (!parsed.success) throw new Error(parsed.error.issues[0]?.message);
       const v = parsed.data;
       const oldPrice = v.old_price === "" || v.old_price == null ? null : Number(v.old_price);
       const payload = {

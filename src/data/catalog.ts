@@ -37,10 +37,10 @@ export interface Product {
   image: string;
   /** Preço de venda. */
   price: number;
-  oldPrice?: number;
+  oldPrice?: number | undefined;
   rating: number;
   reviews: number;
-  badge?: string;
+  badge?: string | undefined;
   tags: ProductTag[];
   short: string;
   description: string;
