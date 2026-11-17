@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { Button } from "@/components/ui/button";
 import { categories, getCategory, productsByCategory, productsByTag, type CategorySlug } from "@/data/catalog";
+import { useProducts } from "@/lib/products";
 
 function resolve(slug: string) {
   if (slug === "ofertas") {
@@ -54,7 +55,8 @@ export const Route = createFileRoute("/categoria/$slug")({
 function CategoryPage() {
   const { slug } = Route.useParams();
   const info = Route.useLoaderData();
-  const list = slug === "ofertas" ? productsByTag("oferta") : productsByCategory(slug as CategorySlug);
+  const products = useProducts();
+  const list = slug === "ofertas" ? productsByTag(products, "oferta") : productsByCategory(products, slug as CategorySlug);
 
   return (
     <div className="container-store pt-6">

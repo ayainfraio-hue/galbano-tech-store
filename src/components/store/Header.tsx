@@ -118,13 +118,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-ink/95 backdrop-blur">
       <div className="hidden bg-gold-gradient text-primary-foreground sm:block">
-        <div className="container-store flex h-8 items-center justify-center gap-2 text-xs font-semibold sm:justify-between">
-          <span className="flex items-center gap-1.5">
+        <div className="container-store flex h-8 items-center justify-center text-xs font-semibold">
+          <span className="flex items-center gap-1.5 text-center">
             <Sparkles className="h-3.5 w-3.5" /> Black November Gálbano: até 30% OFF em tecnologia
           </span>
-          <a href={whatsappUrl()} target="_blank" rel="noreferrer" className="hidden items-center gap-1.5 sm:flex">
-            <WhatsAppIcon className="h-3.5 w-3.5" /> Atendimento {WHATSAPP_DISPLAY}
-          </a>
         </div>
       </div>
 
@@ -138,20 +135,6 @@ export function Header() {
         </div>
         <SearchForm className="hidden sm:block" />
         <div className="flex items-center gap-3">
-          <a
-            href={whatsappUrl()}
-            target="_blank"
-            rel="noreferrer"
-            className="hidden items-center gap-2.5 text-left xl:flex"
-          >
-            <span className="grid h-11 w-11 place-items-center rounded-full border border-border bg-secondary">
-              <WhatsAppIcon className="h-5 w-5 text-whatsapp" />
-            </span>
-            <span className="leading-tight">
-              <span className="block text-xs text-muted-foreground">Fale com um vendedor</span>
-              <span className="block text-sm font-semibold">{WHATSAPP_DISPLAY}</span>
-            </span>
-          </a>
           <CartButton />
         </div>
       </div>

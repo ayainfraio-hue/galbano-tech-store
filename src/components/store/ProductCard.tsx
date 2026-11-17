@@ -1,6 +1,5 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { ShoppingCart, Star } from "lucide-react";
-import { toast } from "sonner";
 
 import type { Product } from "@/data/catalog";
 import { useCart } from "@/lib/cart";
@@ -8,14 +7,10 @@ import { discountPercent, formatBRL } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 export function useAddToCart() {
-  const { add } = useCart();
-  const navigate = useNavigate();
+  const { add, setOpen } = useCart();
   return (product: Product, quantity = 1) => {
     add(product.slug, quantity);
-    toast.success("Produto adicionado ao carrinho", {
-      description: product.name,
-      action: { label: "Ver carrinho", onClick: () => navigate({ to: "/carrinho" }) },
-    });
+    setOpen(true);
   };
 }
 

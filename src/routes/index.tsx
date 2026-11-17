@@ -11,7 +11,8 @@ import { ProductCarousel } from "@/components/store/ProductCarousel";
 import { PromoGrid } from "@/components/store/PromoGrid";
 import { SectionTitle } from "@/components/store/SectionTitle";
 import { ShowcaseWithBanner } from "@/components/store/ShowcaseWithBanner";
-import { products, productsByTag } from "@/data/catalog";
+import { productsByTag } from "@/data/catalog";
+import { useProducts } from "@/lib/products";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,12 +36,13 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const offers = productsByTag("oferta")
+  const products = useProducts();
+  const offers = productsByTag(products, "oferta")
     .slice()
     .sort((a, b) => (b.oldPrice ?? b.price) - b.price - ((a.oldPrice ?? a.price) - a.price));
   const gamer = products.filter((p) => p.category === "games" || p.category === "perifericos");
-  const featured = productsByTag("destaque");
-  const launches = productsByTag("lancamento");
+  const featured = productsByTag(products, "destaque");
+  const launches = productsByTag(products, "lancamento");
 
   return (
     <div className="space-y-14 pb-6 sm:space-y-20">

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { Button } from "@/components/ui/button";
 import { searchProducts } from "@/data/catalog";
+import { useProducts } from "@/lib/products";
 
 export const Route = createFileRoute("/busca")({
   validateSearch: z.object({ q: z.string().optional() }),
@@ -24,7 +25,8 @@ export const Route = createFileRoute("/busca")({
 
 function SearchPage() {
   const { q } = Route.useSearch();
-  const results = searchProducts(q ?? "");
+  const products = useProducts();
+  const results = searchProducts(products, q ?? "");
 
   return (
     <div className="container-store pt-8">

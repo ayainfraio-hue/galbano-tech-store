@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { getProduct, type Product } from "@/data/catalog";
+import { useProductsMaybe } from "./products";
 import { orderTotals, type OrderLine } from "./whatsapp";
 
 const STORAGE_KEY = "galbano-cart-v1";
@@ -19,6 +20,8 @@ interface CartContextValue {
   count: number;
   total: number;
   ready: boolean;
+  isOpen: boolean;
+  setOpen: (open: boolean) => void;
   add: (slug: string, quantity?: number) => void;
   setQuantity: (slug: string, quantity: number) => void;
   remove: (slug: string) => void;
@@ -28,15 +31,17 @@ interface CartContextValue {
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const products = useProductsMaybe();
   const [entries, setEntries] = useState<CartEntry[]>([]);
   const [ready, setReady] = useState(false);
+  const [isOpen, setOpen] = useState(false);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as CartEntry[];
-        if (Array.isArray(parsed)) setEntries(parsed.filter((e) => getProduct(e.slug) && e.quantity > 0));
+        if (Array.isArray(parsed)) setEntries(parsed.filter((e) => typeof e?.slug === "string" && e.quantity > 0));
       }
     } catch {
       // carrinho corrompido: começa vazio
@@ -68,15 +73,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clear = useCallback(() => setEntries([]), []);
 
   const value = useMemo<CartContextValue>(() => {
+    const list = products ?? [];
+    // Produtos removidos do catálogo somem do carrinho automaticamente.
     const lines: CartLine[] = entries.flatMap((e) => {
-      const product = getProduct(e.slug);
+      const product = getProduct(list, e.slug);
       return product
         ? [{ product, name: product.name, sku: product.sku, price: product.price, quantity: e.quantity }]
         : [];
     });
     const { total, items } = orderTotals(lines);
-    return { lines, count: items, total, ready, add, setQuantity, remove, clear };
-  }, [entries, ready, add, setQuantity, remove, clear]);
+    return {
+      lines,
+      count: items,
+      total,
+      ready: ready && !!products,
+      isOpen,
+      setOpen,
+      add,
+      setQuantity,
+      remove,
+      clear,
+    };
+  }, [entries, products, ready, isOpen, add, setQuantity, remove, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

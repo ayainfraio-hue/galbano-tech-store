@@ -1,6 +1,8 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { ArrowLeft, ShoppingBag, Trash2 } from "lucide-react";
 
+import { CheckoutDialog } from "@/components/store/CheckoutDialog";
 import { ProductCarousel } from "@/components/store/ProductCarousel";
 import { QuantityStepper } from "@/components/store/QuantityStepper";
 import { SectionTitle } from "@/components/store/SectionTitle";
@@ -9,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { productsByTag } from "@/data/catalog";
 import { useCart } from "@/lib/cart";
 import { formatBRL } from "@/lib/pricing";
-import { buildOrderMessage, whatsappUrl } from "@/lib/whatsapp";
+import { useProducts } from "@/lib/products";
 
 export const Route = createFileRoute("/carrinho")({
   head: () => ({
@@ -28,7 +30,8 @@ export const Route = createFileRoute("/carrinho")({
 
 function CartPage() {
   const { lines, count, total, ready, setQuantity, remove, clear } = useCart();
-  const checkoutUrl = whatsappUrl(buildOrderMessage(lines));
+  const products = useProducts();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   return (
     <div className="container-store pt-8">
@@ -129,22 +132,27 @@ function CartPage() {
                 <dd className="font-display text-3xl font-extrabold text-gold-gradient">{formatBRL(total)}</dd>
               </div>
             </dl>
-            <Button asChild variant="whatsapp" size="xl" className="mt-6 w-full rounded-full">
-              <a href={checkoutUrl} target="_blank" rel="noreferrer">
-                <WhatsAppIcon className="h-5 w-5" /> Finalizar pedido no WhatsApp
-              </a>
+            <Button variant="whatsapp" size="xl" className="mt-6 w-full rounded-full" onClick={() => setCheckoutOpen(true)}>
+              <WhatsAppIcon className="h-5 w-5" /> Finalizar pedido pelo WhatsApp
             </Button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Você será direcionado ao WhatsApp comercial com a lista dos produtos, quantidades e o valor total.
+              Informe nome e telefone, registramos o pedido e abrimos o WhatsApp comercial com o resumo completo.
               Pagamento e entrega são combinados com o vendedor.
             </p>
           </aside>
         </div>
       )}
 
+      <CheckoutDialog
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        items={lines.map((l) => ({ slug: l.product.slug, name: l.name, sku: l.sku, price: l.price, quantity: l.quantity }))}
+        onOrderCreated={clear}
+      />
+
       <section className="mt-16">
         <SectionTitle eyebrow="Aproveite" title="Ofertas para você" />
-        <ProductCarousel products={productsByTag("oferta")} />
+        <ProductCarousel products={productsByTag(products, "oferta")} />
       </section>
     </div>
   );

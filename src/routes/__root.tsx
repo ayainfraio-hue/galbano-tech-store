@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -16,7 +17,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/store/Header";
 import { Footer } from "@/components/store/Footer";
 import { WhatsAppFloat } from "@/components/store/WhatsAppFloat";
+import { CartDrawer } from "@/components/store/CartDrawer";
+import { supabase } from "@/integrations/supabase/client";
 import { CartProvider } from "@/lib/cart";
+import { productsQueryOptions } from "@/lib/products";
 
 function NotFoundComponent() {
   return (
@@ -77,6 +81,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  loader: ({ context }) => context.queryClient.ensureQueryData(productsQueryOptions),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -127,8 +132,33 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/** Painel e login usam o próprio layout, sem cabeçalho/rodapé da loja. */
+function isBackofficePath(pathname: string) {
+  return pathname.startsWith("/admin") || pathname === "/auth" || pathname === "/reset-password";
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      router.invalidate();
+      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    });
+    return () => data.subscription.unsubscribe();
+  }, [router, queryClient]);
+
+  if (isBackofficePath(pathname)) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+        <Toaster position="top-center" theme="dark" />
+      </QueryClientProvider>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -141,6 +171,7 @@ function RootComponent() {
           <Footer />
         </div>
         <WhatsAppFloat />
+        <CartDrawer />
         <Toaster position="top-center" theme="dark" />
       </CartProvider>
     </QueryClientProvider>

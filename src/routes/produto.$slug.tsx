@@ -9,13 +9,15 @@ import { SectionTitle } from "@/components/store/SectionTitle";
 import { WhatsAppIcon } from "@/components/store/WhatsAppIcon";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCategory, getProduct, products } from "@/data/catalog";
+import { CheckoutDialog } from "@/components/store/CheckoutDialog";
+import { getCategory, getProduct } from "@/data/catalog";
+import { productsQueryOptions, useProducts } from "@/lib/products";
 import { discountPercent, formatBRL } from "@/lib/pricing";
-import { buildOrderMessage, whatsappUrl } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/produto/$slug")({
-  loader: ({ params }) => {
-    const product = getProduct(params.slug);
+  loader: async ({ params, context }) => {
+    const products = await context.queryClient.ensureQueryData(productsQueryOptions);
+    const product = getProduct(products, params.slug);
     if (!product) throw notFound();
     return { product };
   },
@@ -47,8 +49,11 @@ export const Route = createFileRoute("/produto/$slug")({
 });
 
 function ProductPage() {
-  const { product } = Route.useLoaderData();
+  const { product: loaded } = Route.useLoaderData();
+  const products = useProducts();
+  const product = getProduct(products, loaded.slug) ?? loaded;
   const [qty, setQty] = useState(1);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const addToCart = useAddToCart();
   const navigate = useNavigate();
   const category = getCategory(product.category);
@@ -56,9 +61,6 @@ function ProductPage() {
   const related = products.filter((p) => p.category === product.category && p.slug !== product.slug);
   const more = related.length >= 4 ? related : [...related, ...products.filter((p) => p.category !== product.category && p.tags.includes("destaque"))].slice(0, 10);
 
-  const buyNowUrl = whatsappUrl(
-    buildOrderMessage([{ name: product.name, sku: product.sku, price: product.price, quantity: qty }]),
-  );
 
   return (
     <div className="container-store pt-6">
@@ -142,10 +144,8 @@ function ProductPage() {
               </Button>
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Button asChild variant="whatsapp" size="xl" className="rounded-full">
-                <a href={buyNowUrl} target="_blank" rel="noreferrer">
-                  <WhatsAppIcon className="h-5 w-5" /> Comprar pelo WhatsApp
-                </a>
+              <Button variant="whatsapp" size="xl" className="rounded-full" onClick={() => setCheckoutOpen(true)}>
+                <WhatsAppIcon className="h-5 w-5" /> Comprar pelo WhatsApp
               </Button>
               <Button
                 variant="outline-gold"
@@ -199,6 +199,12 @@ function ProductPage() {
           </dl>
         </TabsContent>
       </Tabs>
+
+      <CheckoutDialog
+        open={checkoutOpen}
+        onOpenChange={setCheckoutOpen}
+        items={[{ slug: product.slug, name: product.name, sku: product.sku, price: product.price, quantity: qty }]}
+      />
 
       {more.length > 0 && (
         <section className="mt-16">
