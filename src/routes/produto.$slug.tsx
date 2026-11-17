@@ -131,11 +131,11 @@ function ProductPage() {
             )}
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <QuantityStepper value={qty} onChange={setQty} />
+              <QuantityStepper value={qty} onChange={setQty} className="w-full justify-between sm:w-auto" />
               <Button
                 variant="gold"
                 size="xl"
-                className="flex-1 rounded-full"
+                className="w-full rounded-full sm:w-auto sm:flex-1"
                 onClick={() => addToCart(product, qty)}
               >
                 <ShoppingCart /> Adicionar ao carrinho

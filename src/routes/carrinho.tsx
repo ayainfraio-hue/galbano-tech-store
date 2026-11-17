@@ -69,8 +69,8 @@ function CartPage() {
                 key={line.product.slug}
                 className="grid grid-cols-[88px_minmax(0,1fr)] gap-4 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[110px_minmax(0,1fr)_auto] sm:items-center sm:p-4"
               >
-                <Link to="/produto/$slug" params={{ slug: line.product.slug }} className="block overflow-hidden rounded-xl bg-surface p-2">
-                  <img src={line.product.image} alt={line.product.name} className="aspect-square w-full object-contain" loading="lazy" />
+                <Link to="/produto/$slug" params={{ slug: line.product.slug }} className="block self-start overflow-hidden rounded-xl bg-surface p-2">
+                  <img src={line.product.image} alt={line.product.name} className="aspect-square w-full object-contain mix-blend-multiply" loading="lazy" />
                 </Link>
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">{line.product.brand}</p>

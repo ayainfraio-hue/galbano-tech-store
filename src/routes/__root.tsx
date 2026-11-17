@@ -141,7 +141,7 @@ function RootComponent() {
           <Footer />
         </div>
         <WhatsAppFloat />
-        <Toaster position="top-center" richColors={false} />
+        <Toaster position="top-center" theme="dark" />
       </CartProvider>
     </QueryClientProvider>
   );
