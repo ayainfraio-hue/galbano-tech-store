@@ -125,7 +125,7 @@ function SettingsPage() {
       </ul>}
     </Panel>
 
-    <Panel className="mt-6 p-5 sm:p-6">
+    <Panel id="galeria-clientes" className="mt-6 scroll-mt-24 p-5 sm:p-6">
       <div className="mb-4"><h2 className="text-lg font-semibold">Galeria de clientes</h2><p className="text-sm text-muted-foreground">Adicione fotos e depoimentos. Eles aparecem em carrossel na loja e abrem em uma janela ao clicar.</p></div>
       <form className="grid gap-4 sm:grid-cols-2" onSubmit={e=>{e.preventDefault();uploadGallery.mutate();}}>
         <Field label="Nome do cliente"><Input value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="Ex.: Maria"/></Field>
