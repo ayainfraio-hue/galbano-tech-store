@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="150" viewBox="0 0 520 150" role="img" aria-labelledby="title desc">
+  <title id="title">Gálbano Tech</title>
+  <desc id="desc">Símbolo circular dourado com monograma G e nome Gálbano Tech.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5d889"/>
+      <stop offset=".48" stop-color="#bd9140"/>
+      <stop offset="1" stop-color="#8c6425"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(12 12)" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="63" cy="63" r="54"/>
+    <path d="M88 35a37 37 0 1 0 9 37H67"/>
+    <path d="M63 8v22"/>
+  </g>
+  <text x="150" y="83" fill="#202020" font-family="Georgia, 'Times New Roman', serif" font-size="61" letter-spacing="2">GÁLBANO</text>
+  <path d="M153 111H238 M432 111H505" stroke="url(#gold)" stroke-width="2"/>
+  <text x="335" y="120" fill="#a77a2e" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" letter-spacing="9">TECH</text>
+</svg>
