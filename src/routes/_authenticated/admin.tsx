@@ -73,9 +73,9 @@ function AdminLayout() {
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:flex-col lg:items-start lg:px-5 lg:py-6">
           <Link to="/admin" className="flex min-w-0 items-center">
             <img
-              src="/__l5e/assets-v1/383ad439-de63-4672-944b-79a73a77c679/galbano-logo.png"
+              src="/galbano-logo.svg"
               alt="Gálbano Tech"
-              className="h-auto max-h-14 w-auto max-w-[210px] object-contain object-left"
+              className="h-auto max-h-12 w-[210px] object-contain object-left"
             />
           </Link>
           <Button variant="ghost" size="sm" onClick={signOut} className="lg:hidden" aria-label="Sair">
