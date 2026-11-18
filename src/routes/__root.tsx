@@ -9,7 +9,7 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -141,6 +141,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Always start a newly opened/navigated page at the top before the browser paints.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
