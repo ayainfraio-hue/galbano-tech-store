@@ -73,17 +73,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       toast.error("Produto sem estoque disponível.");
       return;
     }
+    const current = entries.find((entry) => entry.slug === slug)?.quantity ?? 0;
+    if (current + quantity > product.stock) {
+      toast.error(`Estoque disponível: apenas ${product.stock} unidade(s).`);
+    }
     setEntries((prev) => {
       const found = prev.find((e) => e.slug === slug);
-      const current = found?.quantity ?? 0;
       const next = Math.min(product.stock, current + quantity);
-      if (next < current + quantity) {
-        toast.error(`Estoque disponível: apenas ${product.stock} unidade(s).`);
-      }
       if (found) return prev.map((e) => (e.slug === slug ? { ...e, quantity: next } : e));
       return [...prev, { slug, quantity: Math.min(product.stock, quantity) }];
     });
-  }, [products]);
+  }, [products, entries]);
 
   const setQuantity = useCallback((slug: string, quantity: number) => {
     if (quantity <= 0) {
