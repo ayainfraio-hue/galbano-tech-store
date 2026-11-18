@@ -20,6 +20,7 @@ import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
 import { Route as ProdutoSlugRouteImport } from './routes/produto.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminEstoqueRouteImport } from './routes/_authenticated/admin.estoque'
+import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
 import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin.pedidos'
 import { Route as AuthenticatedAdminProdutosRouteImport } from './routes/_authenticated/admin.produtos'
 
@@ -78,6 +79,12 @@ const AuthenticatedAdminEstoqueRoute =
     path: '/estoque',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminConfiguracoesRoute =
+  AuthenticatedAdminConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminPedidosRoute =
   AuthenticatedAdminPedidosRouteImport.update({
     id: '/pedidos',
@@ -101,6 +108,8 @@ export interface FileRoutesByFullPath {
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/admin/estoque': typeof AuthenticatedAdminEstoqueRoute
+  '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/admin/produtos': typeof AuthenticatedAdminProdutosRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -130,6 +139,7 @@ export interface FileRoutesById {
   '/categoria/$slug': typeof CategoriaSlugRoute
   '/produto/$slug': typeof ProdutoSlugRoute
   '/_authenticated/admin/estoque': typeof AuthenticatedAdminEstoqueRoute
+  '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
   '/_authenticated/admin/produtos': typeof AuthenticatedAdminProdutosRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -146,6 +156,8 @@ export interface FileRouteTypes {
     | '/categoria/$slug'
     | '/produto/$slug'
     | '/admin/estoque'
+    | '/admin/configuracoes'
+    | '/admin/configuracoes'
     | '/admin/pedidos'
     | '/admin/produtos'
     | '/admin/'
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
     | '/categoria/$slug'
     | '/produto/$slug'
     | '/_authenticated/admin/estoque'
+    | '/_authenticated/admin/configuracoes'
     | '/_authenticated/admin/pedidos'
     | '/_authenticated/admin/produtos'
     | '/_authenticated/admin/'
@@ -269,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEstoqueRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/configuracoes': {
+      id: '/_authenticated/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AuthenticatedAdminConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/pedidos': {
       id: '/_authenticated/admin/pedidos'
       path: '/pedidos'
@@ -287,6 +307,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
   AuthenticatedAdminEstoqueRoute: typeof AuthenticatedAdminEstoqueRoute
   AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
   AuthenticatedAdminProdutosRoute: typeof AuthenticatedAdminProdutosRoute
@@ -294,6 +315,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
   AuthenticatedAdminEstoqueRoute: AuthenticatedAdminEstoqueRoute,
   AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
   AuthenticatedAdminProdutosRoute: AuthenticatedAdminProdutosRoute,
