@@ -81,6 +81,7 @@ function Index() {
       </section>
 
       <BrandsRow />
+      <CustomerGallery />
       <AboutFaq />
     </div>
   );
