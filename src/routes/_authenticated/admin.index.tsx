@@ -7,14 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { revenue } from "@/lib/orders";
 import { useStoreSettings } from "@/lib/store-content";
 import { formatBRL } from "@/lib/pricing";
-import { useStoreSettings } from "@/lib/store-content";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: Dashboard,
 });
 
 function Dashboard() {
-  const settings = useStoreSettings().data;\n  const settings = useStoreSettings().data;
+  const settings = useStoreSettings().data;
   const orders = useQuery({
     queryKey: ["admin", "orders-summary"],
     queryFn: async () => {
@@ -37,7 +36,8 @@ function Dashboard() {
   });
 
   const list = orders.data ?? [];
-  const threshold = settings?.low_stock_threshold ?? 3;\n  const low = (products.data ?? []).filter((p) => p.active && p.stock <= threshold);
+  const threshold = settings?.low_stock_threshold ?? 3;
+  const low = (products.data ?? []).filter((p) => p.active && p.stock <= threshold);
   const cards = [
     { label: "Pedidos", value: String(list.length), icon: ClipboardList },
     { label: "Novos", value: String(list.filter((o) => o.status === "Novo").length), icon: ClipboardList },
