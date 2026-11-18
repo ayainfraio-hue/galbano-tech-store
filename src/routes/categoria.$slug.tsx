@@ -3,7 +3,8 @@ import { ChevronRight } from "lucide-react";
 
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { Button } from "@/components/ui/button";
-import { categories, getCategory, productsByCategory, productsByTag, type CategorySlug } from "@/data/catalog";
+import { getCategory, productsByCategory, productsByTag } from "@/data/catalog";
+import { useStoreCategories } from "@/lib/store-content";
 import { useProducts } from "@/lib/products";
 
 function resolve(slug: string) {
@@ -14,10 +15,10 @@ function resolve(slug: string) {
     };
   }
   const category = getCategory(slug);
-  if (!category) return null;
+  const title = category?.name ?? slug.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
   return {
-    title: category.name,
-    description: `${category.name} com preços especiais na Gálbano Tech. Monte seu carrinho e finalize pelo WhatsApp.`,
+    title,
+    description: `${title} com preços especiais na Gálbano Tech. Monte seu carrinho e finalize pelo WhatsApp.`,
   };
 }
 
@@ -56,19 +57,22 @@ function CategoryPage() {
   const { slug } = Route.useParams();
   const info = Route.useLoaderData();
   const products = useProducts();
-  const list = slug === "ofertas" ? productsByTag(products, "oferta") : productsByCategory(products, slug as CategorySlug);
+  const categoryQuery = useStoreCategories();
+  const dynamicCategory = categoryQuery.data?.find((category) => category.slug === slug);
+  const title = dynamicCategory?.name ?? info.title;
+  const list = slug === "ofertas" ? productsByTag(products, "oferta") : productsByCategory(products, slug);
 
   return (
     <div className="container-store pt-6">
       <nav aria-label="Navegação" className="flex items-center gap-1 text-xs text-muted-foreground">
         <Link to="/" className="hover:text-gold">Início</Link>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-foreground">{info.title}</span>
+        <span className="text-foreground">{title}</span>
       </nav>
 
       <div className="mt-5 overflow-hidden rounded-3xl border border-gold/30 bg-panel px-6 py-8 sm:px-10 sm:py-10">
         <span className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">Gálbano Tech</span>
-        <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">{info.title}</h1>
+        <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">{title}</h1>
         <p className="mt-2 max-w-xl text-sm text-muted-foreground">{info.description}</p>
       </div>
 
@@ -86,7 +90,7 @@ function CategoryPage() {
                 Ofertas
               </Link>
             </li>
-            {categories.map((c) => (
+            {(categoryQuery.data ?? []).map((c) => (
               <li key={c.slug}>
                 <Link
                   to="/categoria/$slug"

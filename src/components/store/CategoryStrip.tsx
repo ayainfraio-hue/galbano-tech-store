@@ -1,8 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-
-import { categories as fallbackCategories, getCategory } from "@/data/catalog";
-import { supabase } from "@/integrations/supabase/client";
+import { getCategory } from "@/data/catalog";
+import { useStoreCategories } from "@/lib/store-content";
 
 export function CategoryStrip() {
   const categories = useQuery({

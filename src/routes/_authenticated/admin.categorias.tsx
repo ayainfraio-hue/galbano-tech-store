@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Save, Trash2 } from "lucide-react";
+import { ImagePlus, Plus, Save, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -19,6 +19,7 @@ function CategoriesPage() {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [editing, setEditing] = useState<Record<string, Partial<Category>>>({});
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
 
   const categories = useQuery({
     queryKey: ["admin", "store-categories"],
@@ -28,6 +29,39 @@ function CategoriesPage() {
       return data as Category[];
     },
   });
+
+  async function uploadCategoryImage(category: Category, file?: File) {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Use uma imagem JPG, PNG ou WebP.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 10 MB.");
+      return;
+    }
+    setUploadingId(category.id);
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `category-images/${category.id}/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from("customer-gallery").upload(path, file, {
+        contentType: file.type,
+        cacheControl: "3600",
+        upsert: false,
+      });
+      if (uploadError) throw new Error(`Não foi possível enviar a imagem: ${uploadError.message}`);
+      const imageUrl = supabase.storage.from("customer-gallery").getPublicUrl(path).data.publicUrl;
+      const { error: updateError } = await supabase.from("store_categories").update({ image_url: imageUrl }).eq("id", category.id);
+      if (updateError) throw updateError;
+      toast.success(`Foto de ${category.name} atualizada.`);
+      await qc.invalidateQueries({ queryKey: ["admin", "store-categories"] });
+      await qc.invalidateQueries({ queryKey: ["store-categories"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível salvar a imagem.");
+    } finally {
+      setUploadingId(null);
+    }
+  }
 
   const save = useMutation({
     mutationFn: async (value: { id?: string; name: string; slug?: string; active?: boolean; sort_order?: number; remove?: boolean }) => {
@@ -95,6 +129,6 @@ function CategoriesPage() {
           })}
         </ul>}
     </Panel>
-    <p className="mt-3 text-xs text-muted-foreground">O endereço da categoria é criado automaticamente. A ordem define como elas aparecem na loja.</p>
+    <p className="mt-3 text-xs text-muted-foreground">O endereço da categoria é criado automaticamente. A ordem define como elas aparecem na loja. As fotos aceitam JPG, PNG ou WebP, até 10 MB.</p>
   </>;
 }

@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { categories } from "@/data/catalog";
+import { useStoreCategories } from "@/lib/store-content";
 import { useCart } from "@/lib/cart";
 import { WHATSAPP_DISPLAY, formatWhatsAppDisplay, whatsappUrl } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
@@ -69,6 +69,7 @@ function CartButton() {
 function MobileMenu() {
   const [open, setOpen] = useState(false);
   const settings = useStoreSettings().data;
+  const categories = useStoreCategories().data ?? [];
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -118,6 +119,7 @@ function MobileMenu() {
 
 export function Header() {
   const settings = useStoreSettings().data;
+  const categories = useStoreCategories().data ?? [];
   const notices = [settings?.top_notice_1, settings?.top_notice_2].filter((value): value is string => Boolean(value?.trim()));
   const [noticeIndex, setNoticeIndex] = useState(0);
   useEffect(() => { if (notices.length < 2) return; const timer = window.setInterval(() => setNoticeIndex((index) => (index + 1) % notices.length), 5000); return () => window.clearInterval(timer); }, [notices.length]);

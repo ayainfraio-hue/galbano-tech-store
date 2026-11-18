@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { categories as fallbackCategories } from "@/data/catalog";
 
 export type StoreSettings = {
   id: string;
@@ -61,5 +62,40 @@ export function useCustomerGallery() {
       return data;
     },
     staleTime: 60_000,
+  });
+}
+
+
+export type StoreCategory = {
+  id?: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
+  active?: boolean;
+  sort_order?: number;
+};
+
+export function useStoreCategories() {
+  return useQuery({
+    queryKey: ["store-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_categories")
+        .select("id,name,slug,image_url,active,sort_order")
+        .eq("active", true)
+        .order("sort_order")
+        .order("name");
+      if (error) throw error;
+      return data as StoreCategory[];
+    },
+    staleTime: 30_000,
+    placeholderData: fallbackCategories.map((category, index) => ({
+      id: undefined,
+      name: category.name,
+      slug: category.slug,
+      image_url: category.image,
+      active: true,
+      sort_order: index + 1,
+    })),
   });
 }
