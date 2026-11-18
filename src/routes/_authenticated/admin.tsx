@@ -4,7 +4,6 @@ import { Boxes, ClipboardList, ExternalLink, FolderTree, Image, LayoutDashboard,
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/galbano-logo.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async ({ context }) => {
@@ -72,12 +71,12 @@ function AdminLayout() {
     <div className="min-h-screen bg-[#f7f8fa] text-slate-900 [--foreground:#1e293b] [--muted-foreground:#64748b] [--background:#f7f8fa] [--secondary:#f1f5f9] [--border:#e2e8f0] [--input:#e2e8f0] [--card:#ffffff] [--popover:#ffffff] lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
       <aside className="sticky top-0 z-30 border-b border-slate-200 bg-white lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:flex-col lg:items-start lg:px-5 lg:py-6">
-          <Link to="/admin" className="flex items-center gap-2.5">
-            <img src={logo.url} alt="Gálbano Tech" className="h-10 w-auto max-w-[180px] object-contain object-left" />
-            <span className="leading-tight">
-              <span className="block font-display text-sm font-bold text-gold-gradient">Gálbano Tech</span>
-              <span className="block text-xs text-muted-foreground">Painel</span>
-            </span>
+          <Link to="/admin" className="flex min-w-0 items-center">
+            <img
+              src="/__l5e/assets-v1/383ad439-de63-4672-944b-79a73a77c679/galbano-logo.png"
+              alt="Gálbano Tech"
+              className="h-auto max-h-14 w-auto max-w-[210px] object-contain object-left"
+            />
           </Link>
           <Button variant="ghost" size="sm" onClick={signOut} className="lg:hidden" aria-label="Sair">
             <LogOut />
