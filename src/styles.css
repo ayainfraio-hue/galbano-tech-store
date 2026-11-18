@@ -164,7 +164,9 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    /* Keep route changes and browser scroll restoration instantaneous.
+       Smooth scrolling here makes the previous page position flash on navigation. */
+    scroll-behavior: auto;
   }
 
   body {
