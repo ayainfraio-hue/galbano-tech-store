@@ -12,7 +12,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { categories } from "@/data/catalog";
 import { useCart } from "@/lib/cart";
-import { WHATSAPP_DISPLAY, whatsappUrl } from "@/lib/whatsapp";
+import { WHATSAPP_DISPLAY, formatWhatsAppDisplay, whatsappUrl } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
 import { useStoreSettings } from "@/lib/store-content";
 import { useStoreSettings } from "@/lib/store-content";
@@ -109,7 +109,7 @@ function MobileMenu() {
         <div className="m-4 rounded-xl border border-border bg-panel p-4">
           <p className="text-sm text-muted-foreground">Atendimento comercial</p>
           <a href={whatsappUrl(undefined, settings?.whatsapp_number)} target="_blank" rel="noreferrer" className="mt-1 flex items-center gap-2 font-semibold text-foreground">
-            <WhatsAppIcon className="h-4 w-4 text-whatsapp" /> {WHATSAPP_DISPLAY}
+            <WhatsAppIcon className="h-4 w-4 text-whatsapp" /> {settings?.whatsapp_number ? formatWhatsAppDisplay(settings.whatsapp_number) : WHATSAPP_DISPLAY}
           </a>
         </div>
       </SheetContent>

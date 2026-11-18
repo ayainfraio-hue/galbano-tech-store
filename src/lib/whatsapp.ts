@@ -70,6 +70,12 @@ export function buildOrderMessage(lines: OrderLine[], info?: OrderInfo) {
   ].join("\n");
 }
 
+export function formatWhatsAppDisplay(value: string) {
+  const digits = normalizePhone(value);
+  const local = digits.startsWith("55") ? digits.slice(2) : digits;
+  return `${digits.startsWith("55") ? "+55 " : ""}${formatPhone(local)}`;
+}
+
 export function whatsappUrl(message?: string, number: string = WHATSAPP_NUMBER) {
   const safeNumber = normalizePhone(number) || WHATSAPP_NUMBER;
   const base = `https://wa.me/${safeNumber}`;

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { categories } from "@/data/catalog";
-import { WHATSAPP_DISPLAY, whatsappUrl } from "@/lib/whatsapp";
+import { WHATSAPP_DISPLAY, formatWhatsAppDisplay, whatsappUrl } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
 import { useStoreSettings } from "@/lib/store-content";
 import { WhatsAppIcon } from "./WhatsAppIcon";
@@ -53,7 +53,7 @@ export function Footer() {
           <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
             <li>
               <a href={whatsappUrl()} target="_blank" rel="noreferrer" className="flex items-center gap-2 font-semibold text-foreground hover:text-gold">
-                <WhatsAppIcon className="h-4 w-4 text-whatsapp" /> {WHATSAPP_DISPLAY}
+                <WhatsAppIcon className="h-4 w-4 text-whatsapp" /> {settings?.whatsapp_number ? formatWhatsAppDisplay(settings.whatsapp_number) : WHATSAPP_DISPLAY}
               </a>
             </li>
             {settings?.email && <li><a href={`mailto:${settings.email}`} className="hover:text-gold">{settings.email}</a></li>}\n            {settings?.instagram && <li><a href={settings.instagram.startsWith("http") ? settings.instagram : `https://instagram.com/${settings.instagram.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="hover:text-gold">{settings.instagram}</a></li>}\n            {settings?.business_hours && <li>{settings.business_hours}</li>}\n            {settings?.address && <li>{settings.address}</li>}

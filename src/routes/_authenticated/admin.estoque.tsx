@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { isLowStock } from "@/lib/orders";
+import { useStoreSettings } from "@/lib/store-content";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin/estoque")({
@@ -22,6 +22,8 @@ type StockProduct = { id: string; name: string; sku: string; image_url: string; 
 const MOVEMENT_LABEL: Record<string, string> = { entrada: "Entrada", saida: "Saída", venda: "Venda", estorno: "Estorno" };
 
 function StockPage() {
+  const settings = useStoreSettings().data;
+  const threshold = settings?.low_stock_threshold ?? 3;
   const [q, setQ] = useState("");
   const [onlyLow, setOnlyLow] = useState(false);
   const [moving, setMoving] = useState<{ product: StockProduct; type: "entrada" | "saida" } | null>(null);
@@ -53,10 +55,10 @@ function StockPage() {
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();
     return (products.data ?? []).filter(
-      (p) => (!onlyLow || isLowStock(p)) && (!term || p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term)),
+      (p) => (!onlyLow || p.stock <= threshold) && (!term || p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term)),
     );
   }, [products.data, q, onlyLow]);
-  const lowCount = (products.data ?? []).filter(isLowStock).length;
+  const lowCount = (products.data ?? []).filter((p) => p.stock <= threshold).length;
 
   return (
     <>
