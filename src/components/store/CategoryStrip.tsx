@@ -3,18 +3,11 @@ import { getCategory } from "@/data/catalog";
 import { useStoreCategories } from "@/lib/store-content";
 
 export function CategoryStrip() {
-  const categories = useQuery({
-    queryKey: ["store-categories"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("store_categories").select("name,slug,image_url").eq("active", true).order("sort_order");
-      if (error) throw error;
-      return data;
-    },
-  });
+  const categories = useStoreCategories();
   const items = categories.data?.map((category) => ({
     ...category,
     image: category.image_url || getCategory(category.slug)?.image || "",
-  })) ?? fallbackCategories;
+  })) ?? [];
 
   return (
     <section aria-label="Categorias" className="container-store">

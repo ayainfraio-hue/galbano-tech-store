@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { Button } from "@/components/ui/button";
-import { getCategory, productsByCategory, productsByTag } from "@/data/catalog";
+import { getCategory, productsByTag } from "@/data/catalog";
 import { useStoreCategories } from "@/lib/store-content";
 import { useProducts } from "@/lib/products";
 
@@ -60,7 +60,7 @@ function CategoryPage() {
   const categoryQuery = useStoreCategories();
   const dynamicCategory = categoryQuery.data?.find((category) => category.slug === slug);
   const title = dynamicCategory?.name ?? info.title;
-  const list = slug === "ofertas" ? productsByTag(products, "oferta") : productsByCategory(products, slug);
+  const list = slug === "ofertas" ? productsByTag(products, "oferta") : products.filter((product) => product.category === slug);
 
   return (
     <div className="container-store pt-6">
