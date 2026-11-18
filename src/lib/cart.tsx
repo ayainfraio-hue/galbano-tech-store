@@ -98,7 +98,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setEntries((prev) => prev.filter((e) => cartEntryKey(e) !== key));
       return;
     }
-    const product = getProduct(products ?? [], slug);
+    const entry = entries.find((item) => cartEntryKey(item) === key);
+    const product = entry ? getProduct(products ?? [], entry.slug) : undefined;
     const safeQuantity = product ? Math.min(quantity, product.stock) : quantity;
     if (product && quantity > product.stock) {
       toast.error(`Estoque disponível para este produto: ${product.stock} unidade(s).`);
@@ -108,7 +109,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         ? prev.filter((e) => cartEntryKey(e) !== key)
         : prev.map((e) => (cartEntryKey(e) === key ? { ...e, quantity: safeQuantity } : e)),
     );
-  }, [products]);
+  }, [products, entries]);
 
   const remove = useCallback((key: string) => setEntries((prev) => prev.filter((e) => cartEntryKey(e) !== key)), []);
   const clear = useCallback(() => setEntries([]), []);
