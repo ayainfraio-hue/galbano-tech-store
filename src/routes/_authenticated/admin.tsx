@@ -1,6 +1,6 @@
 import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Boxes, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, Settings, ShieldAlert } from "lucide-react";
+import { Boxes, ClipboardList, ExternalLink, Image, LayoutDashboard, LogOut, Package, Settings, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +31,7 @@ const nav = [
   { to: "/admin/produtos", label: "Produtos", icon: Package, exact: false },
   { to: "/admin/estoque", label: "Estoque", icon: Boxes, exact: false },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings, exact: false },
+  { to: "/admin/configuracoes", hash: "galeria-clientes", label: "Galeria de clientes", icon: Image, exact: false },
 ] as const;
 
 function AdminLayout() {
@@ -85,6 +86,7 @@ function AdminLayout() {
             <Link
               key={item.to}
               to={item.to}
+              hash={"hash" in item ? item.hash : undefined}
               activeOptions={{ exact: item.exact }}
               className="flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground"
               activeProps={{ className: "!bg-gold/15 !text-gold" }}
