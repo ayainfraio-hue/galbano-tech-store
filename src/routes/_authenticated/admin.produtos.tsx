@@ -270,7 +270,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
       const v = parsed.data;
       const oldPrice = v.old_price === "" || v.old_price == null ? null : Number(v.old_price);
       const payload = {
-        name: v.name, slug: v.slug, brand: v.brand, sku: v.sku || `GT-${v.slug.toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`, category: v.category,
+        name: v.name.split("*").join("").trim(), slug: v.slug, brand: v.brand, sku: v.sku || `GT-${v.slug.toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`, category: v.category,
         price: v.price, old_price: oldPrice && oldPrice > v.price ? oldPrice : null,
         min_stock: v.min_stock, badge: v.badge || null, short_description: v.short_description,
         description: v.description, image_url: form.gallery_urls[0] ?? v.image_url, gallery_urls: form.gallery_urls, variants: form.variants.filter((variant) => variant.name.trim() && variant.options.length), sort_order: v.sort_order ?? 100,
