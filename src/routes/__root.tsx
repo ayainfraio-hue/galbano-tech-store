@@ -21,6 +21,7 @@ import { CartDrawer } from "@/components/store/CartDrawer";
 import { supabase } from "@/integrations/supabase/client";
 import { CartProvider } from "@/lib/cart";
 import { productsQueryOptions } from "@/lib/products";
+import { refreshBrandFavicon } from "@/lib/brand-logo";
 
 function NotFoundComponent() {
   return (
@@ -152,6 +153,8 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => { refreshBrandFavicon(); }, []);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {

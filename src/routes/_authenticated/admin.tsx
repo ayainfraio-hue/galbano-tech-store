@@ -2,9 +2,9 @@ import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-rout
 import { useQueryClient } from "@tanstack/react-query";
 import { Boxes, ClipboardList, ExternalLink, FolderTree, Image, LayoutDashboard, LogOut, Package, Settings, Tags, ShieldAlert } from "lucide-react";
 
-import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/store/BrandLogo";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -112,28 +112,13 @@ function AdminLayout() {
   );
 }
 
-/**
- * Logo do painel (fundo branco). Usa o SVG local feito para fundo claro — os
- * arquivos .webp têm fundo preto e ficam como uma caixa escura aqui. Se o SVG
- * não carregar, mostra o nome da loja em texto.
- */
+/** A mesma identidade visual usada na vitrine, com o SVG atual como fallback. */
 function AdminLogo() {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return (
-      <span className="font-display text-lg font-bold tracking-wide text-slate-900">
-        GÁLBANO <span className="text-gold">TECH</span>
-      </span>
-    );
-  }
   return (
-    <img
-      src="/galbano-logo.svg"
+    <BrandLogo
       alt="Gálbano Tech"
-      width={520}
-      height={150}
-      onError={() => setFailed(true)}
       className="h-10 w-auto object-contain lg:h-12"
+      fallback={<img src="/galbano-logo.svg" alt="Gálbano Tech" width={520} height={150} className="h-10 w-auto object-contain lg:h-12" />}
     />
   );
 }

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock3, Instagram, Mail, MapPin, MessageCircle, Package, Save, Store } from "lucide-react";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { Clock3, Image as ImageIcon, Instagram, Mail, MapPin, MessageCircle, Package, Save, Store, Upload } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, Panel } from "@/components/admin/AdminUi";
@@ -10,11 +10,50 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { defaultStoreSettings, type StoreSettings } from "@/lib/store-content";
+import { BRAND_LOGO_BUCKET, BRAND_LOGO_PATH, getBrandLogoUrl, refreshBrandFavicon } from "@/lib/brand-logo";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({ component: SettingsPage });
 
 function SettingsPage() {
   const qc = useQueryClient();
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState("");
+  const [logoVersion, setLogoVersion] = useState(0);
+  const [logoMissing, setLogoMissing] = useState(false);
+
+  useEffect(() => {
+    if (!logoFile) { setLogoPreview(""); return; }
+    const previewUrl = URL.createObjectURL(logoFile);
+    setLogoPreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [logoFile]);
+
+  const uploadLogo = useMutation({
+    mutationFn: async () => {
+      if (!logoFile) throw new Error("Selecione a nova logo.");
+      if (!["image/png", "image/jpeg", "image/webp"].includes(logoFile.type)) {
+        throw new Error("Use uma imagem PNG, JPG ou WebP.");
+      }
+      if (logoFile.size > 10 * 1024 * 1024) throw new Error("A logo deve ter no máximo 10 MB.");
+      const { error } = await supabase.storage.from(BRAND_LOGO_BUCKET).upload(BRAND_LOGO_PATH, logoFile, {
+        cacheControl: "0",
+        contentType: logoFile.type,
+        upsert: true,
+      });
+      if (error) throw new Error(`Não foi possível enviar a logo: ${error.message}`);
+    },
+    onSuccess: () => {
+      setLogoFile(null);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+      setLogoVersion(Date.now());
+      setLogoMissing(false);
+      refreshBrandFavicon();
+      window.dispatchEvent(new Event("brand-logo-updated"));
+      toast.success("Logo atualizada em toda a loja e no painel.");
+    },
+    onError: (error: Error) => toast.error(error.message || "Não foi possível atualizar a logo."),
+  });
   const settings = useQuery({
     queryKey: ["admin", "store-settings"],
     queryFn: async () => {
@@ -49,6 +88,31 @@ function SettingsPage() {
   return <>
     <PageHeader title="Configurações" description="Tudo o que mantém as informações da sua loja atualizadas." />
     <form onSubmit={submitSettings} className="space-y-5">
+      <SettingsSection icon={<ImageIcon className="h-5 w-5" />} title="Logo da loja" description="Troque a logo em um único lugar. A alteração será refletida na vitrine, no painel e no ícone do navegador.">
+        <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:items-center">
+          <div className="flex min-h-32 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-5">
+            {logoPreview ? (
+              <img src={logoPreview} alt="Prévia da nova logo" className="max-h-24 max-w-full object-contain" />
+            ) : !logoMissing ? (
+              <img src={`${getBrandLogoUrl()}?v=${logoVersion}`} alt="Logo atual" onError={() => setLogoMissing(true)} className="max-h-24 max-w-full object-contain" />
+            ) : (
+              <div className="text-center text-sm text-slate-500">
+                <ImageIcon className="mx-auto mb-2 h-7 w-7 text-slate-300" />
+                Logo padrão em uso
+              </div>
+            )}
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">Envie uma imagem com fundo transparente para o melhor resultado. Formatos aceitos: PNG, JPG e WebP, até 10 MB.</p>
+            <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={e => setLogoFile(e.target.files?.[0] ?? null)} />
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => logoInputRef.current?.click()}><Upload className="h-4 w-4" /> {logoFile ? "Escolher outra imagem" : "Selecionar nova logo"}</Button>
+              <Button type="button" variant="gold" disabled={!logoFile || uploadLogo.isPending} onClick={() => uploadLogo.mutate()}>{uploadLogo.isPending ? "Enviando…" : "Salvar logo"}</Button>
+            </div>
+            {logoFile && <p className="text-xs text-slate-500">Selecionado: {logoFile.name}</p>}
+          </div>
+        </div>
+      </SettingsSection>
       <SettingsSection icon={<Store className="h-5 w-5" />} title="Identidade da loja" description="Informações que identificam sua empresa para os clientes.">
         <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
           <Field label="Nome da loja"><Input value={form.store_name} onChange={e => setForm({ ...form, store_name: e.target.value })} placeholder="Galbano Tech" /></Field>
