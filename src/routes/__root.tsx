@@ -81,7 +81,12 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: ({ context }) => context.queryClient.ensureQueryData(productsQueryOptions),
+  loader: ({ context }) => {
+    // Preload products without blocking the root route or delaying the storefront shell.
+    void context.queryClient.prefetchQuery(productsQueryOptions).catch((error) => {
+      console.error("Failed to preload store products:", error);
+    });
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
