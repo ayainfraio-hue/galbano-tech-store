@@ -39,7 +39,7 @@ export function CartDrawer() {
             <>
               <ul className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
                 {lines.map((line) => (
-                  <li key={line.product.slug} className="grid grid-cols-[72px_minmax(0,1fr)] gap-3 rounded-2xl border border-border bg-card p-3">
+                  <li key={line.cartKey} className="grid grid-cols-[72px_minmax(0,1fr)] gap-3 rounded-2xl border border-border bg-card p-3">
                     <Link
                       to="/produto/$slug"
                       params={{ slug: line.product.slug }}
@@ -51,15 +51,16 @@ export function CartDrawer() {
                     <div className="min-w-0">
                       <p className="line-clamp-2 text-sm font-medium leading-snug">{line.product.name}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">{formatBRL(line.price)} / un.</p>
+                      {line.variantLabel && <p className="mt-1 text-xs text-gold">{line.variantLabel}</p>}
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <QuantityStepper
                           value={line.quantity}
-                          onChange={(v) => setQuantity(line.product.slug, v)}
+                          onChange={(v) => setQuantity(line.cartKey, v)}
                           className="h-9 [&_button]:h-9 [&_button]:w-9"
                         />
                         <button
                           type="button"
-                          onClick={() => remove(line.product.slug)}
+                          onClick={() => remove(line.cartKey)}
                           aria-label={`Remover ${line.product.name}`}
                           className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-destructive"
                         >
@@ -93,7 +94,7 @@ export function CartDrawer() {
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
-        items={lines.map((l) => ({ slug: l.product.slug, name: l.name, sku: l.sku, price: l.price, quantity: l.quantity }))}
+        items={lines.map((l) => ({ slug: l.product.slug, name: l.name, sku: l.sku, price: l.price, quantity: l.quantity, options: l.options }))}
         onOrderCreated={() => {
           clear();
           setOpen(false);

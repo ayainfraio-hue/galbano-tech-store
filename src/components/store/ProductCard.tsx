@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 
 export function useAddToCart() {
   const { add, setOpen } = useCart();
-  return (product: Product, quantity = 1) => {
-    add(product.slug, quantity);
+  return (product: Product, quantity = 1, options: Record<string, string> = {}) => {
+    add(product.slug, quantity, options);
     setOpen(true);
   };
 }
@@ -68,14 +68,15 @@ export function ProductCard({ product, className }: { product: Product; classNam
           </p>
           <div className="mt-0.5 flex items-end justify-between gap-2">
             <p className="font-display text-xl font-bold tracking-tight">{formatBRL(product.price)}</p>
-            <button
-              type="button"
-              onClick={() => addToCart(product)}
-              aria-label={`Adicionar ${product.name} ao carrinho`}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-gold transition hover:bg-gold-gradient hover:text-primary-foreground"
-            >
-              <ShoppingCart className="h-4 w-4" />
-            </button>
+            {product.variants.length > 0 ? (
+              <Link to="/produto/$slug" params={{ slug: product.slug }} aria-label={`Escolher opções de ${product.name}`} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-gold transition hover:bg-gold-gradient hover:text-primary-foreground">
+                <ShoppingCart className="h-4 w-4" />
+              </Link>
+            ) : (
+              <button type="button" onClick={() => addToCart(product)} aria-label={`Adicionar ${product.name} ao carrinho`} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-gold transition hover:bg-gold-gradient hover:text-primary-foreground">
+                <ShoppingCart className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

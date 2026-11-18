@@ -10,10 +10,17 @@ const STORAGE_KEY = "galbano-cart-v1";
 interface CartEntry {
   slug: string;
   quantity: number;
+  options?: Record<string, string>;
+}
+
+function cartEntryKey(entry: Pick<CartEntry, "slug" | "options">) {
+  return `${entry.slug}::${JSON.stringify(Object.entries(entry.options ?? {}).sort(([a], [b]) => a.localeCompare(b)))}`;
 }
 
 export interface CartLine extends OrderLine {
   product: Product;
+  cartKey: string;
+  variantLabel: string;
 }
 
 interface CartContextValue {
@@ -23,9 +30,9 @@ interface CartContextValue {
   ready: boolean;
   isOpen: boolean;
   setOpen: (open: boolean) => void;
-  add: (slug: string, quantity?: number) => void;
-  setQuantity: (slug: string, quantity: number) => void;
-  remove: (slug: string) => void;
+  add: (slug: string, quantity?: number, options?: Record<string, string>) => void;
+  setQuantity: (cartKey: string, quantity: number) => void;
+  remove: (cartKey: string) => void;
   clear: () => void;
 }
 
@@ -42,7 +49,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as CartEntry[];
-        if (Array.isArray(parsed)) setEntries(parsed.filter((e) => typeof e?.slug === "string" && e.quantity > 0));
+        if (Array.isArray(parsed)) setEntries(parsed.filter((e) => typeof e?.slug === "string" && e.quantity > 0).map((e) => ({ ...e, options: e.options ?? {} })));
       }
     } catch {
       // carrinho corrompido: começa vazio
@@ -67,42 +74,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }, [products]);
 
-  const add = useCallback((slug: string, quantity = 1) => {
+  const add = useCallback((slug: string, quantity = 1, options: Record<string, string> = {}) => {
     const product = getProduct(products ?? [], slug);
     if (!product || product.stock <= 0) {
       toast.error("Produto sem estoque disponível.");
       return;
     }
-    const current = entries.find((entry) => entry.slug === slug)?.quantity ?? 0;
+    const key = cartEntryKey({ slug, options });
+    const current = entries.find((entry) => cartEntryKey(entry) === key)?.quantity ?? 0;
     if (current + quantity > product.stock) {
       toast.error(`Estoque disponível: apenas ${product.stock} unidade(s).`);
     }
     setEntries((prev) => {
-      const found = prev.find((e) => e.slug === slug);
+      const found = prev.find((e) => cartEntryKey(e) === key);
       const next = Math.min(product.stock, current + quantity);
-      if (found) return prev.map((e) => (e.slug === slug ? { ...e, quantity: next } : e));
-      return [...prev, { slug, quantity: Math.min(product.stock, quantity) }];
+      if (found) return prev.map((e) => (cartEntryKey(e) === key ? { ...e, quantity: next } : e));
+      return [...prev, { slug, options, quantity: Math.min(product.stock, quantity) }];
     });
   }, [products, entries]);
 
-  const setQuantity = useCallback((slug: string, quantity: number) => {
+  const setQuantity = useCallback((key: string, quantity: number) => {
     if (quantity <= 0) {
-      setEntries((prev) => prev.filter((e) => e.slug !== slug));
+      setEntries((prev) => prev.filter((e) => cartEntryKey(e) !== key));
       return;
     }
-    const product = getProduct(products ?? [], slug);
+    const entry = entries.find((item) => cartEntryKey(item) === key);
+    const product = entry ? getProduct(products ?? [], entry.slug) : undefined;
     const safeQuantity = product ? Math.min(quantity, product.stock) : quantity;
     if (product && quantity > product.stock) {
       toast.error(`Estoque disponível para este produto: ${product.stock} unidade(s).`);
     }
     setEntries((prev) =>
       safeQuantity <= 0
-        ? prev.filter((e) => e.slug !== slug)
-        : prev.map((e) => (e.slug === slug ? { ...e, quantity: safeQuantity } : e)),
+        ? prev.filter((e) => cartEntryKey(e) !== key)
+        : prev.map((e) => (cartEntryKey(e) === key ? { ...e, quantity: safeQuantity } : e)),
     );
-  }, [products]);
+  }, [products, entries]);
 
-  const remove = useCallback((slug: string) => setEntries((prev) => prev.filter((e) => e.slug !== slug)), []);
+  const remove = useCallback((key: string) => setEntries((prev) => prev.filter((e) => cartEntryKey(e) !== key)), []);
   const clear = useCallback(() => setEntries([]), []);
 
   const value = useMemo<CartContextValue>(() => {
@@ -111,7 +120,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const product = getProduct(list, e.slug);
       if (!product || product.stock <= 0) return [];
       const quantity = Math.min(e.quantity, product.stock);
-      return [{ product, name: product.name, sku: product.sku, price: product.price, quantity }];
+      return [{ product, name: product.name, sku: product.sku, price: product.price, quantity, options: e.options ?? {}, cartKey: cartEntryKey(e), variantLabel: Object.entries(e.options ?? {}).map(([key, value]) => `${key}: ${value}`).join(" · ") }];
     });
     const { total, items } = orderTotals(lines);
     return {

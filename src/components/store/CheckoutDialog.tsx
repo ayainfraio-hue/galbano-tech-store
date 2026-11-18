@@ -81,7 +81,7 @@ export function CheckoutDialog({
       const { data, error } = await supabase.rpc("create_order", {
         _customer_name: parsed.data.name,
         _customer_phone: normalizePhone(parsed.data.phone),
-        _items: items.map((i) => ({ slug: i.slug, quantity: i.quantity })),
+        _items: items.map((i) => ({ slug: i.slug, quantity: i.quantity, options: i.options ?? {} })),
       });
       if (error || !data) throw new Error(error?.message ?? "Falha ao registrar o pedido");
       const order = data as unknown as CreatedOrder;

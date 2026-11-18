@@ -9,6 +9,7 @@ export interface OrderLine {
   sku: string;
   price: number;
   quantity: number;
+  options?: Record<string, string>;
 }
 
 /** Dados do pedido já registrado no banco, incluídos na mensagem. */
@@ -48,7 +49,7 @@ export function buildOrderMessage(lines: OrderLine[], info?: OrderInfo) {
   const body = lines
     .map(
       (l, i) =>
-        `${i + 1}. ${l.name}\n   Cód: ${l.sku} | Qtd: ${l.quantity} x ${formatBRL(l.price)} = ${formatBRL(
+        `${i + 1}. ${l.name}${l.options && Object.keys(l.options).length ? `\n   Opções: ${Object.entries(l.options).map(([key, value]) => `${key}: ${value}`).join(" · ")}` : ""}\n   Cód: ${l.sku} | Qtd: ${l.quantity} x ${formatBRL(
           roundCents(l.price * l.quantity),
         )}`,
     )

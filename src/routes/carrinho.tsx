@@ -69,7 +69,7 @@ function CartPage() {
           <ul className="space-y-3">
             {lines.map((line) => (
               <li
-                key={line.product.slug}
+                key={line.cartKey}
                 className="grid grid-cols-[88px_minmax(0,1fr)] gap-4 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[110px_minmax(0,1fr)_auto] sm:items-center sm:p-4"
               >
                 <Link to="/produto/$slug" params={{ slug: line.product.slug }} className="block self-start overflow-hidden rounded-xl bg-surface p-2">
@@ -81,11 +81,12 @@ function CartPage() {
                     <h2 className="line-clamp-2 font-sans text-sm font-medium hover:underline">{line.product.name}</h2>
                   </Link>
                   <p className="mt-1 text-xs text-muted-foreground">Cód. {line.sku} · {formatBRL(line.price)} / un.</p>
+                  {line.variantLabel && <p className="mt-1 text-xs text-gold">{line.variantLabel}</p>}
                   <div className="mt-3 flex items-center gap-3 sm:hidden">
-                    <QuantityStepper value={line.quantity} onChange={(v) => setQuantity(line.product.slug, v)} />
+                    <QuantityStepper value={line.quantity} onChange={(v) => setQuantity(line.cartKey, v)} />
                     <button
                       type="button"
-                      onClick={() => remove(line.product.slug)}
+                      onClick={() => remove(line.cartKey)}
                       aria-label={`Remover ${line.product.name}`}
                       className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground hover:text-destructive"
                     >
@@ -95,11 +96,11 @@ function CartPage() {
                   <p className="mt-2 font-display text-lg font-bold sm:hidden">{formatBRL(line.price * line.quantity)}</p>
                 </div>
                 <div className="hidden items-center gap-5 sm:flex">
-                  <QuantityStepper value={line.quantity} onChange={(v) => setQuantity(line.product.slug, v)} />
+                  <QuantityStepper value={line.quantity} onChange={(v) => setQuantity(line.cartKey, v)} />
                   <p className="w-32 text-right font-display text-lg font-bold">{formatBRL(line.price * line.quantity)}</p>
                   <button
                     type="button"
-                    onClick={() => remove(line.product.slug)}
+                    onClick={() => remove(line.cartKey)}
                     aria-label={`Remover ${line.product.name}`}
                     className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-destructive"
                   >
@@ -146,7 +147,7 @@ function CartPage() {
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
-        items={lines.map((l) => ({ slug: l.product.slug, name: l.name, sku: l.sku, price: l.price, quantity: l.quantity }))}
+        items={lines.map((l) => ({ slug: l.product.slug, name: l.name, sku: l.sku, price: l.price, quantity: l.quantity, options: l.options }))}
         onOrderCreated={clear}
       />
 

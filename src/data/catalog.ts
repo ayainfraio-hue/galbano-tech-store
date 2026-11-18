@@ -27,6 +27,11 @@ export interface Category {
 
 export type ProductTag = "oferta" | "destaque" | "mais-vendido" | "lancamento";
 
+export interface ProductVariant {
+  name: string;
+  options: string[];
+}
+
 export interface Product {
   id: string;
   slug: string;
@@ -35,6 +40,8 @@ export interface Product {
   sku: string;
   category: CategorySlug;
   image: string;
+  images: string[];
+  variants: ProductVariant[];
   /** Preço de venda. */
   price: number;
   oldPrice?: number | undefined;

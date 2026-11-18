@@ -1,6 +1,6 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, ChevronRight, ShieldCheck, ShoppingCart, Star, Truck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useAddToCart } from "@/components/store/ProductCard";
 import { ProductCarousel } from "@/components/store/ProductCarousel";
@@ -9,6 +9,8 @@ import { SectionTitle } from "@/components/store/SectionTitle";
 import { WhatsAppIcon } from "@/components/store/WhatsAppIcon";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ProductDescription } from "@/components/store/ProductDescription";
 import { CheckoutDialog } from "@/components/store/CheckoutDialog";
 import { getCategory, getProduct } from "@/data/catalog";
 import { productsQueryOptions, useProducts } from "@/lib/products";
@@ -53,6 +55,14 @@ function ProductPage() {
   const products = useProducts();
   const product = getProduct(products, loaded.slug) ?? loaded;
   const [qty, setQty] = useState(1);
+  const [activeImage, setActiveImage] = useState(product.image);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const optionsComplete = product.variants.every((variant) => !!selectedOptions[variant.name]);
+  useEffect(() => {
+    setActiveImage(product.image);
+    setSelectedOptions({});
+    setQty(1);
+  }, [product.slug, product.image]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const addToCart = useAddToCart();
   const navigate = useNavigate();
@@ -79,17 +89,20 @@ function ProductPage() {
       </nav>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
-        <div className="relative overflow-hidden rounded-3xl border border-surface-border bg-surface p-6 sm:p-10">
-          {off > 0 && (
-            <span className="absolute left-5 top-5 rounded-md bg-ink px-2.5 py-1 text-xs font-bold text-gold">-{off}% OFF</span>
+        <div>
+          <div className="relative overflow-hidden rounded-3xl border border-surface-border bg-surface p-6 sm:p-10">
+            {off > 0 && <span className="absolute left-5 top-5 z-10 rounded-md bg-ink px-2.5 py-1 text-xs font-bold text-gold">-{off}% OFF</span>}
+            <img src={activeImage} alt={product.name} width={816} height={816} className="mx-auto aspect-square w-full max-w-lg object-contain mix-blend-multiply" />
+          </div>
+          {product.images.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {product.images.map((image, index) => (
+                <button key={image} type="button" onClick={() => setActiveImage(image)} aria-label={`Ver foto ${index + 1}`} aria-pressed={activeImage === image} className={`h-16 w-16 overflow-hidden rounded-xl border bg-surface p-1 ${activeImage === image ? "border-gold ring-2 ring-gold/30" : "border-border"}`}>
+                  <img src={image} alt="" className="h-full w-full object-contain" />
+                </button>
+              ))}
+            </div>
           )}
-          <img
-            src={product.image}
-            alt={product.name}
-            width={816}
-            height={816}
-            className="mx-auto aspect-square w-full max-w-lg object-contain mix-blend-multiply"
-          />
         </div>
 
         <div className="flex flex-col">
@@ -105,7 +118,7 @@ function ProductPage() {
             <span className="text-muted-foreground">Cód. {product.sku}</span>
           </div>
 
-          <h1 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">{product.name}</h1>
+          <h1 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">{product.name.split("*").join("").trim()}</h1>
 
           <div className="mt-3 flex items-center gap-2 text-sm">
             <span className="flex">
@@ -132,27 +145,43 @@ function ProductPage() {
               </p>
             )}
 
+            {product.variants.length > 0 && (
+              <div className="mt-5 space-y-3">
+                {product.variants.map((variant) => (
+                  <div key={variant.name} className="space-y-1.5">
+                    <label className="text-sm font-semibold">{variant.name}</label>
+                    <Select value={selectedOptions[variant.name] ?? ""} onValueChange={(value) => setSelectedOptions((current) => ({ ...current, [variant.name]: value }))}>
+                      <SelectTrigger><SelectValue placeholder={`Escolha ${variant.name.toLowerCase()}`} /></SelectTrigger>
+                      <SelectContent>{variant.options.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+            )}
+            {product.variants.length > 0 && !optionsComplete && <p className="mt-3 text-xs text-muted-foreground">Selecione as opções para continuar.</p>}
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <QuantityStepper value={qty} onChange={setQty} className="w-full justify-between sm:w-auto" />
               <Button
                 variant="gold"
                 size="xl"
                 className="w-full rounded-full sm:w-auto sm:flex-1"
-                onClick={() => addToCart(product, qty)}
+                disabled={!optionsComplete}
+                onClick={() => addToCart(product, qty, selectedOptions)}
               >
                 <ShoppingCart /> Adicionar ao carrinho
               </Button>
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Button variant="whatsapp" size="xl" className="rounded-full" onClick={() => setCheckoutOpen(true)}>
+              <Button variant="whatsapp" size="xl" className="rounded-full" onClick={() => setCheckoutOpen(true)} disabled={!optionsComplete}>
                 <WhatsAppIcon className="h-5 w-5" /> Comprar pelo WhatsApp
               </Button>
               <Button
                 variant="outline-gold"
                 size="xl"
                 className="rounded-full"
+                disabled={!optionsComplete}
                 onClick={() => {
-                  addToCart(product, qty);
+                  addToCart(product, qty, selectedOptions);
                   navigate({ to: "/carrinho" });
                 }}
               >
@@ -186,7 +215,7 @@ function ProductPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="descricao" className="mt-6 max-w-3xl leading-relaxed text-muted-foreground">
-          {product.description}
+          <ProductDescription text={product.description} />
         </TabsContent>
         <TabsContent value="especificacoes" className="mt-6">
           <dl className="max-w-3xl overflow-hidden rounded-2xl border border-border">
@@ -203,7 +232,7 @@ function ProductPage() {
       <CheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
-        items={[{ slug: product.slug, name: product.name, sku: product.sku, price: product.price, quantity: qty }]}
+        items={[{ slug: product.slug, name: product.name, sku: product.sku, price: product.price, quantity: qty, options: selectedOptions }]}
       />
 
       {more.length > 0 && (
