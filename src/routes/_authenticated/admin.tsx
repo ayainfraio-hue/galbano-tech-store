@@ -117,8 +117,8 @@ function AdminLogo() {
   return (
     <BrandLogo
       alt="Gálbano Tech"
-      className="h-10 w-auto object-contain lg:h-12"
-      fallback={<img src="/galbano-logo.svg" alt="Gálbano Tech" width={520} height={150} className="h-10 w-auto object-contain lg:h-12" />}
+      className="h-12 w-auto object-contain lg:h-14"
+      fallback={<img src="/galbano-logo.svg" alt="Gálbano Tech" width={520} height={150} className="h-12 w-auto object-contain lg:h-14" />}
     />
   );
 }
