@@ -125,7 +125,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0);",
+              "if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; const resetScroll = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); resetScroll(); window.addEventListener('pageshow', resetScroll, { once: true }); window.addEventListener('load', () => requestAnimationFrame(resetScroll), { once: true });",
           }}
         />
         <HeadContent />
