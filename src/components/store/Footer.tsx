@@ -11,7 +11,7 @@ export function Footer() {
   return (
     <footer className="mt-20 border-t border-border bg-ink">
       <div className="gold-divider" />
-      <div className="container-store grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+      <div className="container-store grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.2fr]">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm text-muted-foreground">
@@ -34,17 +34,6 @@ export function Footer() {
                 </Link>
               </li>
             ))}
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-gold">Institucional</h3>
-          <ul className="mt-4 space-y-2.5 text-sm text-muted-foreground">
-            <li>Quem somos</li>
-            <li>Como comprar</li>
-            <li>Política de trocas e devoluções</li>
-            <li>Política de privacidade</li>
-            <li>Garantia</li>
           </ul>
         </div>
 
