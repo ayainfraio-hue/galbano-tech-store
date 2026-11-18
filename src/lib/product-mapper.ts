@@ -13,7 +13,7 @@ export function mapProductRow(row: ProductRow): Product {
   return {
     id: row.id,
     slug: row.slug,
-    name: row.name.replace(/\\*/g, "").trim(),
+    name: row.name.split("*").join("").trim(),
     brand: row.brand,
     sku: row.sku,
     category: row.category as CategorySlug,
