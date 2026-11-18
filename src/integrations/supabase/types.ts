@@ -45,6 +45,7 @@ export type Database = {
           order_id: string
           product_id?: string | null
           product_name: string
+          selected_options?: Json
           quantity: number
           sku: string
           subtotal: number
@@ -180,6 +181,8 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string
+          gallery_urls?: Json
+          variants?: Json
           min_stock?: number
           name?: string
           old_price?: number | null
