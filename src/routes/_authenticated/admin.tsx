@@ -84,7 +84,7 @@ function AdminLayout() {
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:px-3 lg:pb-0">
           {nav.map((item) => (
             <Link
-              key={item.to}
+              key={item.label}
               to={item.to}
               hash={"hash" in item ? item.hash : undefined}
               activeOptions={{ exact: item.exact }}
