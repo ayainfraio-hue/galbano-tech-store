@@ -208,6 +208,14 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
   const [form, setForm] = useState<FormState>(toForm(null));
   const [slugTouched, setSlugTouched] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const categoryOptions = useQuery({
+    queryKey: ["store-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("store_categories").select("name,slug").eq("active", true).order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   useEffect(() => {
     if (product) {
@@ -311,7 +319,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
             <Select value={form.category} onValueChange={(v) => set("category", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {categories.map((c) => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}
+                {(categoryOptions.data?.length ? categoryOptions.data : categories).map((c) => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>
