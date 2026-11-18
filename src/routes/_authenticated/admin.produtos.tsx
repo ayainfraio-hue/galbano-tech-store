@@ -168,7 +168,7 @@ const formSchema = z.object({
   badge: z.string().trim().max(30),
   short_description: z.string().trim().max(200),
   description: z.string().trim().max(4000),
-  image_url: z.string().trim().min(1, "Envie uma foto ou informe o link da imagem"),
+  image_url: z.string().trim().min(1, "Envie uma foto do produto"),
   sort_order: z.coerce.number().int().min(0).max(10000).optional(),
 });
 
@@ -309,9 +309,6 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
           <Field label="Endereço na loja (/produto/…)">
             <Input value={form.slug} maxLength={80} onChange={(e) => { setSlugTouched(true); set("slug", slugify(e.target.value)); }} />
           </Field>
-          <Field label="Código (SKU)">
-            <Input value={form.sku} maxLength={40} onChange={(e) => set("sku", e.target.value)} />
-          </Field>
           <Field label="Marca">
             <Input value={form.brand} maxLength={60} onChange={(e) => set("brand", e.target.value)} />
           </Field>
@@ -344,9 +341,6 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
           <Field label="Selo (opcional)">
             <Input value={form.badge} maxLength={30} placeholder="Ex.: Novo, Exclusivo" onChange={(e) => set("badge", e.target.value)} />
           </Field>
-          <Field label="Ordem na vitrine">
-            <Input type="number" min={0} inputMode="numeric" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} />
-          </Field>
 
           <Field label="Foto do produto" className="sm:col-span-2">
             <div className="flex items-center gap-3">
@@ -359,7 +353,6 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
                   {uploading ? "Enviando…" : "Enviar foto"}
                   <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
                 </label>
-                <Input value={form.image_url} placeholder="ou cole o link de uma imagem" onChange={(e) => set("image_url", e.target.value)} />
               </div>
             </div>
           </Field>
