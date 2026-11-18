@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { slugify } from "@/data/catalog";
+import { getCategory, slugify } from "@/data/catalog";
 
 type Category = { id: string; name: string; slug: string; image_url: string | null; active: boolean; sort_order: number };
 
@@ -116,7 +116,7 @@ function CategoriesPage() {
             return <li key={category.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-1 last:pb-1">
               <div className="flex w-full items-center gap-3 sm:w-auto">
                 <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                  {category.image_url ? <img src={category.image_url} alt={"Foto de " + category.name} className="h-full w-full object-cover" /> : <ImagePlus className="h-5 w-5 text-slate-400" />}
+                  {category.image_url || getCategory(category.slug)?.image ? <img src={category.image_url || getCategory(category.slug)?.image} alt={"Foto de " + category.name} className="h-full w-full object-cover" /> : <ImagePlus className="h-5 w-5 text-slate-400" />}
                 </div>
                 <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
                   <Upload className="h-3.5 w-3.5" />
