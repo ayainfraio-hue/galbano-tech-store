@@ -1,6 +1,6 @@
 import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Boxes, ClipboardList, ExternalLink, Image, LayoutDashboard, LogOut, Package, Settings, ShieldAlert } from "lucide-react";
+import { Boxes, ClipboardList, ExternalLink, Image, LayoutDashboard, LogOut, Package, Settings, Tags, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,8 +30,9 @@ const nav = [
   { to: "/admin/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
   { to: "/admin/produtos", label: "Produtos", icon: Package, exact: false },
   { to: "/admin/estoque", label: "Estoque", icon: Boxes, exact: false },
+  { to: "/admin/galeria-clientes", label: "Galeria de clientes", icon: Image, exact: false },
+  { to: "/admin/marcas", label: "Marcas", icon: Tags, exact: false },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings, exact: false },
-  { to: "/admin/configuracoes", hash: "galeria-clientes", label: "Galeria de clientes", icon: Image, exact: false },
 ] as const;
 
 function AdminLayout() {
@@ -67,8 +68,8 @@ function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="sticky top-0 z-30 border-b border-border bg-panel lg:h-screen lg:border-b-0 lg:border-r">
+    <div className="min-h-screen bg-[#f7f8fa] text-slate-900 lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+      <aside className="sticky top-0 z-30 border-b border-slate-200 bg-white lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:flex-col lg:items-start lg:px-5 lg:py-6">
           <Link to="/admin" className="flex items-center gap-2.5">
             <img src={emblem.url} alt="" className="h-9 w-auto" />
