@@ -68,7 +68,7 @@ function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] text-slate-900 lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+    <div className="min-h-screen bg-[#f7f8fa] text-slate-900 [--foreground:#1e293b] [--muted-foreground:#64748b] [--background:#f7f8fa] [--secondary:#f1f5f9] [--border:#e2e8f0] [--input:#e2e8f0] [--card:#ffffff] [--popover:#ffffff] lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
       <aside className="sticky top-0 z-30 border-b border-slate-200 bg-white lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:flex-col lg:items-start lg:px-5 lg:py-6">
           <Link to="/admin" className="flex items-center gap-2.5">
@@ -89,7 +89,7 @@ function AdminLayout() {
               to={item.to}
               hash={"hash" in item ? item.hash : undefined}
               activeOptions={{ exact: item.exact }}
-              className="flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+              className="flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
               activeProps={{ className: "!bg-gold/15 !text-gold" }}
             >
               <item.icon className="h-4 w-4" /> {item.label}
