@@ -13,3 +13,9 @@
 - [ ] Painel: Dashboard, Produtos (CRUD + imagens + promoções), Estoque (entradas/saídas/alertas), Pedidos (status)
 - [ ] Estoque baixa só quando pedido vira "Pago" (não na criação)
 - [ ] Testes e conferência ponta a ponta
+
+## Painel — melhorias de período e logo
+- [x] Visão geral: seletor de período (Hoje padrão), ticket médio, vendas confirmadas
+- [x] Pedidos: filtro de data + resumo (pedidos exibidos / valor dos pedidos)
+- [x] Logo do painel com SVG local e fallback em texto
+- [ ] Aplicar migração de conteúdo da loja (marcas, categorias, galeria, configurações) — aguarda autorização do dono para alterar o banco

@@ -2,6 +2,8 @@ import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-rout
 import { useQueryClient } from "@tanstack/react-query";
 import { Boxes, ClipboardList, ExternalLink, FolderTree, Image, LayoutDashboard, LogOut, Package, Settings, Tags, ShieldAlert } from "lucide-react";
 
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -72,22 +74,7 @@ function AdminLayout() {
       <aside className="sticky top-0 z-30 border-b border-slate-200 bg-white lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:flex-col lg:items-start lg:px-5 lg:py-6">
           <Link to="/admin" className="flex min-w-0 items-center">
-            <span className="flex items-center gap-2.5">
-              <img
-                src="/galbano-emblem.webp"
-                alt=""
-                width={96}
-                height={96}
-                className="h-9 w-9 shrink-0 object-contain lg:h-11 lg:w-11"
-              />
-              <img
-                src="/galbano-wordmark.webp"
-                alt="Gálbano Tech"
-                width={320}
-                height={100}
-                className="h-6 w-auto object-contain lg:h-8"
-              />
-            </span>
+            <AdminLogo />
           </Link>
           <Button variant="ghost" size="sm" onClick={signOut} className="lg:hidden" aria-label="Sair">
             <LogOut />
@@ -98,7 +85,6 @@ function AdminLayout() {
             <Link
               key={item.label}
               to={item.to}
-              hash={"hash" in item ? item.hash : undefined}
               activeOptions={{ exact: item.exact }}
               className="flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
               activeProps={{ className: "!bg-gold/15 !text-gold" }}
@@ -123,5 +109,31 @@ function AdminLayout() {
         <Outlet />
       </main>
     </div>
+  );
+}
+
+/**
+ * Logo do painel (fundo branco). Usa o SVG local feito para fundo claro — os
+ * arquivos .webp têm fundo preto e ficam como uma caixa escura aqui. Se o SVG
+ * não carregar, mostra o nome da loja em texto.
+ */
+function AdminLogo() {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className="font-display text-lg font-bold tracking-wide text-slate-900">
+        GÁLBANO <span className="text-gold">TECH</span>
+      </span>
+    );
+  }
+  return (
+    <img
+      src="/galbano-logo.svg"
+      alt="Gálbano Tech"
+      width={520}
+      height={150}
+      onError={() => setFailed(true)}
+      className="h-10 w-auto object-contain lg:h-12"
+    />
   );
 }

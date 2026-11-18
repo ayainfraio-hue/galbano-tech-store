@@ -22,6 +22,22 @@ export function revenue(orders: { status: string; total: number | string }[]) {
   return Math.round(orders.filter((o) => isPaid(o.status)).reduce((sum, o) => sum + Number(o.total), 0) * 100) / 100;
 }
 
+/** Pedidos com pagamento confirmado (Pago, Enviado ou Concluído). */
+export function confirmedSales<T extends { status: string }>(orders: T[]) {
+  return orders.filter((o) => isPaid(o.status));
+}
+
+/** Ticket médio = faturamento confirmado / nº de vendas confirmadas (0 sem vendas). */
+export function averageTicket(orders: { status: string; total: number | string }[]) {
+  const sales = confirmedSales(orders).length;
+  return sales === 0 ? 0 : Math.round((revenue(orders) / sales) * 100) / 100;
+}
+
+/** Soma dos totais de todos os pedidos informados, de qualquer status. */
+export function ordersTotal(orders: { total: number | string }[]) {
+  return Math.round(orders.reduce((sum, o) => sum + Number(o.total), 0) * 100) / 100;
+}
+
 export function isLowStock(p: { stock: number; min_stock: number }) {
   return p.stock <= p.min_stock;
 }

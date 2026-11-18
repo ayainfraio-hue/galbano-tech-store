@@ -33,3 +33,4 @@ use the editor.
 - Storefront is front-end only: catalog lives in `src/data/catalog.ts`, cart in `src/lib/cart.tsx` (localStorage). No backend until the owner asks for one.
 - Orders are sent by WhatsApp link built in `src/lib/whatsapp.ts`; keep message/number logic there so `src/test/whatsapp-order.test.ts` covers it.
 - Price formatting/display rules live in `src/lib/pricing.ts`; components must not compute payment terms themselves.
+- Admin period filters use `src/lib/date-range.ts` (local timezone, inclusive start, exclusive next-day end) and sales metrics use `src/lib/orders.ts` helpers, both covered by `src/test/admin-metrics.test.ts`, so dashboard and orders pages stay consistent.

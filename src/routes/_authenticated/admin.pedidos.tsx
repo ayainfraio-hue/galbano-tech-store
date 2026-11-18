@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
 import { EmptyState, PageHeader, Panel, StatusBadge, formatDateTime } from "@/components/admin/AdminUi";
 import { WhatsAppIcon } from "@/components/store/WhatsAppIcon";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { ORDER_STATUSES, isPaid } from "@/lib/orders";
+import { fetchOrdersInRange } from "@/lib/admin-orders";
+import { defaultDateFilter, formatRange, getDateRange, isInRange, type DateFilter } from "@/lib/date-range";
+import { ORDER_STATUSES, isPaid, ordersTotal } from "@/lib/orders";
 import { formatBRL } from "@/lib/pricing";
 import { formatPhone } from "@/lib/whatsapp";
 
@@ -35,41 +38,39 @@ function OrdersPage() {
   const [status, setStatus] = useState<string>("todos");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<DateFilter>(() => defaultDateFilter());
+  const range = useMemo(() => getDateRange(dateFilter), [dateFilter]);
 
   const orders = useQuery({
-    queryKey: ["admin", "orders"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("id, order_number, customer_name, customer_phone, status, total, items_count, stock_deducted, created_at")
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      if (error) throw error;
-      return data as Order[];
-    },
+    queryKey: ["admin", "orders", range.start.toISOString(), range.end.toISOString()],
+    queryFn: () =>
+      fetchOrdersInRange<Order>("id, order_number, customer_name, customer_phone, status, total, items_count, stock_deducted, created_at", range),
+    placeholderData: keepPreviousData,
   });
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return (orders.data ?? []).filter(
       (o) =>
+        isInRange(o.created_at, range) &&
         (status === "todos" || o.status === status) &&
         (!term || o.customer_name.toLowerCase().includes(term) || o.customer_phone.includes(term.replace(/\D/g, "") || "§") || String(o.order_number) === term.replace("#", "")),
     );
-  }, [orders.data, status, q]);
+  }, [orders.data, status, q, range]);
 
   const current = orders.data?.find((o) => o.id === selected) ?? null;
 
   return (
     <>
       <PageHeader title="Pedidos" description="Pedidos registrados antes do envio ao WhatsApp. O estoque baixa quando o pedido é marcado como Pago." />
+      <DateRangeFilter value={dateFilter} onChange={setDateFilter} className="mb-2" />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome, telefone ou nº" className="pl-9" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome, telefone ou nº" className="bg-white pl-9" />
         </div>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="sm:w-56" aria-label="Filtrar status">
+          <SelectTrigger className="bg-white sm:w-56" aria-label="Filtrar status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -79,6 +80,21 @@ function OrdersPage() {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className={`mb-4 grid grid-cols-2 gap-3 transition-opacity ${orders.isFetching && !orders.isLoading ? "opacity-60" : ""}`}>
+        <Panel className="p-4">
+          <p className="text-xs text-muted-foreground">Pedidos exibidos</p>
+          <p className="mt-0.5 font-display text-xl font-bold sm:text-2xl">{orders.isLoading ? "…" : filtered.length}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{formatRange(range)}</p>
+        </Panel>
+        <Panel className="p-4">
+          <p className="text-xs text-muted-foreground">Valor dos pedidos</p>
+          <p className="mt-0.5 font-display text-xl font-bold sm:text-2xl">{orders.isLoading ? "…" : formatBRL(ordersTotal(filtered))}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {status === "todos" ? "Soma de todos os status, inclusive não pagos e cancelados" : `Soma dos pedidos com status ${status}`}
+          </p>
+        </Panel>
       </div>
 
       <Panel>
