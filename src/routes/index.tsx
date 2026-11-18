@@ -13,7 +13,7 @@ import { PromoGrid } from "@/components/store/PromoGrid";
 import { SectionTitle } from "@/components/store/SectionTitle";
 import { ShowcaseWithBanner } from "@/components/store/ShowcaseWithBanner";
 import { productsByTag } from "@/data/catalog";
-import { useProducts } from "@/lib/products";
+import { useProductsMaybe } from "@/lib/products";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,7 +37,9 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const products = useProducts();
+  // Render the storefront shell and hero immediately; product data can hydrate in the background.
+  // Suspending the whole route here briefly exposed the root footer before the homepage mounted.
+  const products = useProductsMaybe() ?? [];
   const offers = productsByTag(products, "oferta")
     .slice()
     .sort((a, b) => (b.oldPrice ?? b.price) - b.price - ((a.oldPrice ?? a.price) - a.price));
