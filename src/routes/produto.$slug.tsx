@@ -113,7 +113,7 @@ function ProductPage() {
             <span className="text-muted-foreground">Cód. {product.sku}</span>
           </div>
 
-          <h1 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">{product.name.replace(/\\*/g, "").trim()}</h1>
+          <h1 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">{product.name.split("*").join("").trim()}</h1>
 
           <div className="mt-3 flex items-center gap-2 text-sm">
             <span className="flex">
