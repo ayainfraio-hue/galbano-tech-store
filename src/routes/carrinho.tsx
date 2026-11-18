@@ -96,11 +96,11 @@ function CartPage() {
                   <p className="mt-2 font-display text-lg font-bold sm:hidden">{formatBRL(line.price * line.quantity)}</p>
                 </div>
                 <div className="hidden items-center gap-5 sm:flex">
-                  <QuantityStepper value={line.quantity} onChange={(v) => setQuantity(line.product.slug, v)} />
+                  <QuantityStepper value={line.quantity} onChange={(v) => setQuantity(line.cartKey, v)} />
                   <p className="w-32 text-right font-display text-lg font-bold">{formatBRL(line.price * line.quantity)}</p>
                   <button
                     type="button"
-                    onClick={() => remove(line.product.slug)}
+                    onClick={() => remove(line.cartKey)}
                     aria-label={`Remover ${line.product.name}`}
                     className="grid h-10 w-10 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-destructive"
                   >
