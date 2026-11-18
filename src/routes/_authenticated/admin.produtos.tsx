@@ -415,7 +415,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
             <Input value={form.short_description} maxLength={200} onChange={(e) => set("short_description", e.target.value)} />
           </Field>
           <Field label="Descrição" className="sm:col-span-2">
-            <Textarea rows={4} value={form.description} maxLength={4000} onChange={(e) => set("description", e.target.value)} />
+            <Textarea rows={4} value={form.description} maxLength={4000} placeholder={"Texto normal com parágrafos. Use **negrito** e listas começando com -"} onChange={(e) => set("description", e.target.value)} />
           </Field>
           <Field label="Especificações (uma por linha, “Nome: valor”)" className="sm:col-span-2">
             <Textarea rows={4} value={form.specs} placeholder={"Tela: 6.7\" AMOLED\nMemória: 256 GB"} onChange={(e) => set("specs", e.target.value)} />
