@@ -55,10 +55,10 @@ function StockPage() {
   const list = useMemo(() => {
     const term = q.trim().toLowerCase();
     return (products.data ?? []).filter(
-      (p) => (!onlyLow || p.stock <= threshold) && (!term || p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term)),
+      (p) => (!onlyLow || isLowStock(p, threshold)) && (!term || p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term)),
     );
-  }, [products.data, q, onlyLow]);
-  const lowCount = (products.data ?? []).filter((p) => p.stock <= threshold).length;
+  }, [products.data, q, onlyLow, threshold]);
+  const lowCount = (products.data ?? []).filter((p) => isLowStock(p, threshold)).length;
 
   return (
     <>
@@ -80,7 +80,7 @@ function StockPage() {
           ) : (
             <ul className="divide-y divide-border">
               {list.map((p) => {
-                const low = isLowStock(p);
+                const low = isLowStock(p, threshold);
                 return (
                   <li key={p.id} className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
                     <img src={p.image_url} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-surface object-contain p-1" />
@@ -204,4 +204,9 @@ function MovementDialog({ moving, onClose }: { moving: { product: StockProduct; 
       </DialogContent>
     </Dialog>
   );
+}
+
+
+function isLowStock(product: StockProduct, threshold: number) {
+  return product.stock <= Math.max(product.min_stock, threshold);
 }
