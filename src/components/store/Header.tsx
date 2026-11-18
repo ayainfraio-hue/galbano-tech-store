@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useStoreCategories } from "@/lib/store-content";
+import { getCategory } from "@/data/catalog";
 import { useCart } from "@/lib/cart";
 import { WHATSAPP_DISPLAY, formatWhatsAppDisplay, whatsappUrl } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
@@ -101,7 +102,7 @@ function MobileMenu() {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-foreground hover:bg-secondary"
             >
-              <img src={c.image} alt="" className="h-9 w-9 rounded-md bg-surface object-contain p-1" loading="lazy" />
+              <img src={c.image_url || getCategory(c.slug)?.image || ""} alt="" className="h-9 w-9 rounded-md bg-surface object-contain p-1" loading="lazy" />
               {c.name}
             </Link>
           ))}
@@ -163,7 +164,7 @@ export function Header() {
               {categories.map((c) => (
                 <DropdownMenuItem key={c.slug} asChild>
                   <Link to="/categoria/$slug" params={{ slug: c.slug }} className="flex items-center gap-3">
-                    <img src={c.image} alt="" className="h-8 w-8 rounded bg-surface object-contain p-0.5" loading="lazy" />
+                    <img src={c.image_url || getCategory(c.slug)?.image || ""} alt="" className="h-8 w-8 rounded bg-surface object-contain p-0.5" loading="lazy" />
                     {c.name}
                   </Link>
                 </DropdownMenuItem>
