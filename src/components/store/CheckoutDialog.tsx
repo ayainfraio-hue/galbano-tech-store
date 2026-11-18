@@ -54,7 +54,8 @@ export function CheckoutDialog({
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<{ name?: string | undefined; phone?: string | undefined }>({});
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState<{ number: number; url: string } | null>(null);\n  const settings = useStoreSettings().data;
+  const [done, setDone] = useState<{ number: number; url: string } | null>(null);
+  const settings = useStoreSettings().data;
   const { total } = orderTotals(items);
 
   useEffect(() => {
