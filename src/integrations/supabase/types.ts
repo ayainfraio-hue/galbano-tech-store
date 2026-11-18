@@ -26,36 +26,6 @@ export type Database = {
         }
         Relationships: []
       }
-      customer_gallery: {
-        Row: {
-          active: boolean
-          created_at: string
-          customer_name: string
-          id: string
-          image_url: string
-          message: string
-          sort_order: number
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          customer_name?: string
-          id?: string
-          image_url: string
-          message: string
-          sort_order?: number
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          customer_name?: string
-          id?: string
-          image_url?: string
-          message?: string
-          sort_order?: number
-        }
-        Relationships: []
-      }
       order_items: {
         Row: {
           created_at: string
@@ -268,72 +238,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      store_brands: {
-        Row: {
-          active: boolean
-          created_at: string
-          id: string
-          name: string
-          sort_order: number
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name: string
-          sort_order?: number
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name?: string
-          sort_order?: number
-        }
-        Relationships: []
-      }
-      store_settings: {
-        Row: {
-          address: string
-          business_hours: string
-          email: string
-          id: string
-          instagram: string
-          low_stock_threshold: number
-          store_name: string
-          top_notice_1: string
-          top_notice_2: string
-          updated_at: string
-          whatsapp_number: string
-        }
-        Insert: {
-          address?: string
-          business_hours?: string
-          email?: string
-          id?: string
-          instagram?: string
-          low_stock_threshold?: number
-          store_name?: string
-          top_notice_1?: string
-          top_notice_2?: string
-          updated_at?: string
-          whatsapp_number?: string
-        }
-        Update: {
-          address?: string
-          business_hours?: string
-          email?: string
-          id?: string
-          instagram?: string
-          low_stock_threshold?: number
-          store_name?: string
-          top_notice_1?: string
-          top_notice_2?: string
-          updated_at?: string
-          whatsapp_number?: string
-        }
-        Relationships: []
       }
       user_roles: {
         Row: {
