@@ -29,7 +29,7 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 export function Panel({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("rounded-2xl border border-border bg-panel", className)}>{children}</div>;
+  return <div className={cn("rounded-2xl border border-slate-200 bg-white shadow-sm", className)}>{children}</div>;
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
