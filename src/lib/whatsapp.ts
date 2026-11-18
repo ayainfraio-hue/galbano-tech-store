@@ -70,7 +70,8 @@ export function buildOrderMessage(lines: OrderLine[], info?: OrderInfo) {
   ].join("\n");
 }
 
-export function whatsappUrl(message?: string) {
-  const base = `https://wa.me/${WHATSAPP_NUMBER}`;
+export function whatsappUrl(message?: string, number: string = WHATSAPP_NUMBER) {
+  const safeNumber = normalizePhone(number) || WHATSAPP_NUMBER;
+  const base = `https://wa.me/${safeNumber}`;
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }

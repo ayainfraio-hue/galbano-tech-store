@@ -5,6 +5,7 @@ import { AboutFaq } from "@/components/store/AboutFaq";
 import { BenefitsBar } from "@/components/store/BenefitsBar";
 import { BestSellers } from "@/components/store/BestSellers";
 import { BrandsRow } from "@/components/store/BrandsRow";
+import { CustomerGallery } from "@/components/store/CustomerGallery";
 import { CategoryStrip } from "@/components/store/CategoryStrip";
 import { HeroCarousel } from "@/components/store/HeroCarousel";
 import { ProductCarousel } from "@/components/store/ProductCarousel";

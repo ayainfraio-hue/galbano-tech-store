@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBRL } from "@/lib/pricing";
+import { useStoreSettings } from "@/lib/store-content";
 import { buildOrderMessage, isValidPhone, normalizePhone, orderTotals, whatsappUrl, type OrderLine } from "@/lib/whatsapp";
 import { WhatsAppIcon } from "./WhatsAppIcon";
 
@@ -53,7 +54,7 @@ export function CheckoutDialog({
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<{ name?: string | undefined; phone?: string | undefined }>({});
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState<{ number: number; url: string } | null>(null);
+  const [done, setDone] = useState<{ number: number; url: string } | null>(null);\n  const settings = useStoreSettings().data;
   const { total } = orderTotals(items);
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export function CheckoutDialog({
         order.items.map((i) => ({ ...i, price: Number(i.price) })),
         { orderNumber: order.order_number, customerName: order.customer_name, customerPhone: order.customer_phone },
       );
-      const url = whatsappUrl(message);
+      const url = whatsappUrl(message, settings?.whatsapp_number);
       if (win) win.location.href = url;
       else window.location.href = url;
       setDone({ number: order.order_number, url });

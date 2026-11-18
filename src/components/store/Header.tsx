@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ChevronDown, LayoutGrid, Menu, Search, ShoppingCart, Sparkles, Tag } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,8 @@ import { categories } from "@/data/catalog";
 import { useCart } from "@/lib/cart";
 import { WHATSAPP_DISPLAY, whatsappUrl } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
+import { useStoreSettings } from "@/lib/store-content";
+import { useStoreSettings } from "@/lib/store-content";
 import { WhatsAppIcon } from "./WhatsAppIcon";
 
 function SearchForm({ className }: { className?: string }) {
@@ -67,6 +69,7 @@ function CartButton() {
 
 function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const settings = useStoreSettings().data;
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -105,7 +108,7 @@ function MobileMenu() {
         </nav>
         <div className="m-4 rounded-xl border border-border bg-panel p-4">
           <p className="text-sm text-muted-foreground">Atendimento comercial</p>
-          <a href={whatsappUrl()} target="_blank" rel="noreferrer" className="mt-1 flex items-center gap-2 font-semibold text-foreground">
+          <a href={whatsappUrl(undefined, settings?.whatsapp_number)} target="_blank" rel="noreferrer" className="mt-1 flex items-center gap-2 font-semibold text-foreground">
             <WhatsAppIcon className="h-4 w-4 text-whatsapp" /> {WHATSAPP_DISPLAY}
           </a>
         </div>
@@ -115,12 +118,16 @@ function MobileMenu() {
 }
 
 export function Header() {
+  const settings = useStoreSettings().data;
+  const notices = [settings?.top_notice_1, settings?.top_notice_2].filter((value): value is string => Boolean(value?.trim()));
+  const [noticeIndex, setNoticeIndex] = useState(0);
+  useEffect(() => { if (notices.length < 2) return; const timer = window.setInterval(() => setNoticeIndex((index) => (index + 1) % notices.length), 5000); return () => window.clearInterval(timer); }, [notices.length]);
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-ink/95 backdrop-blur">
       <div className="hidden bg-gold-gradient text-primary-foreground sm:block">
         <div className="container-store flex h-8 items-center justify-center text-xs font-semibold">
           <span className="flex items-center gap-1.5 text-center">
-            <Sparkles className="h-3.5 w-3.5" /> Black November Gálbano: até 30% OFF em tecnologia
+            <Sparkles className="h-3.5 w-3.5" /> {notices[noticeIndex] ?? "Tecnologia premium com atendimento personalizado"}
           </span>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Boxes, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, ShieldAlert } from "lucide-react";
+import { Boxes, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, Settings, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +30,7 @@ const nav = [
   { to: "/admin/pedidos", label: "Pedidos", icon: ClipboardList, exact: false },
   { to: "/admin/produtos", label: "Produtos", icon: Package, exact: false },
   { to: "/admin/estoque", label: "Estoque", icon: Boxes, exact: false },
+  { to: "/admin/configuracoes", label: "Configurações", icon: Settings, exact: false },
 ] as const;
 
 function AdminLayout() {
