@@ -174,8 +174,9 @@ function ProductPage() {
                 variant="outline-gold"
                 size="xl"
                 className="rounded-full"
+                disabled={!optionsComplete}
                 onClick={() => {
-                  addToCart(product, qty);
+                  addToCart(product, qty, selectedOptions);
                   navigate({ to: "/carrinho" });
                 }}
               >
