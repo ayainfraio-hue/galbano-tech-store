@@ -4,7 +4,7 @@ import { Boxes, ClipboardList, ExternalLink, FolderTree, Image, LayoutDashboard,
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import emblem from "@/assets/galbano-emblem.png.asset.json";
+import logo from "@/assets/galbano-logo.png.asset.json";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async ({ context }) => {
@@ -73,7 +73,7 @@ function AdminLayout() {
       <aside className="sticky top-0 z-30 border-b border-slate-200 bg-white lg:h-screen lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:flex-col lg:items-start lg:px-5 lg:py-6">
           <Link to="/admin" className="flex items-center gap-2.5">
-            <img src={emblem.url} alt="" className="h-9 w-auto" />
+            <img src={logo.url} alt="Gálbano Tech" className="h-10 w-auto max-w-[180px] object-contain object-left" />
             <span className="leading-tight">
               <span className="block font-display text-sm font-bold text-gold-gradient">Gálbano Tech</span>
               <span className="block text-xs text-muted-foreground">Painel</span>
