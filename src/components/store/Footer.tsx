@@ -18,7 +18,7 @@ export function Footer() {
             Loja de tecnologia e eletrônicos com curadoria premium e atendimento personalizado pelo WhatsApp.
           </p>
           <div className="mt-5 flex gap-2">
-            <a href={whatsappUrl(undefined, settings?.whatsapp_number) target="_blank" rel="noreferrer" aria-label="WhatsApp" className="grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-gold hover:text-gold">
+            <a href={whatsappUrl(undefined, settings?.whatsapp_number)} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-gold hover:text-gold">
               <WhatsAppIcon className="h-4 w-4" />
             </a>
           </div>
@@ -52,11 +52,14 @@ export function Footer() {
           <h3 className="text-sm font-bold uppercase tracking-widest text-gold">Central de atendimento</h3>
           <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
             <li>
-              <a href={whatsappUrl()} target="_blank" rel="noreferrer" className="flex items-center gap-2 font-semibold text-foreground hover:text-gold">
+              <a href={whatsappUrl(undefined, settings?.whatsapp_number)} target="_blank" rel="noreferrer" className="flex items-center gap-2 font-semibold text-foreground hover:text-gold">
                 <WhatsAppIcon className="h-4 w-4 text-whatsapp" /> {settings?.whatsapp_number ? formatWhatsAppDisplay(settings.whatsapp_number) : WHATSAPP_DISPLAY}
               </a>
             </li>
-            {settings?.email && <li><a href={`mailto:${settings.email}`} className="hover:text-gold">{settings.email}</a></li>}\n            {settings?.instagram && <li><a href={settings.instagram.startsWith("http") ? settings.instagram : `https://instagram.com/${settings.instagram.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="hover:text-gold">{settings.instagram}</a></li>}\n            {settings?.business_hours && <li>{settings.business_hours}</li>}\n            {settings?.address && <li>{settings.address}</li>}
+            {settings?.email && <li><a href={`mailto:${settings.email}`} className="hover:text-gold">{settings.email}</a></li>}
+            {settings?.instagram && <li><a href={settings.instagram.startsWith("http") ? settings.instagram : `https://instagram.com/${settings.instagram.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="hover:text-gold">{settings.instagram}</a></li>}
+            {settings?.business_hours && <li>{settings.business_hours}</li>}
+            {settings?.address && <li>{settings.address}</li>}
           </ul>
         </div>
       </div>
