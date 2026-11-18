@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { getProduct, type Product } from "@/data/catalog";
 import { useProductsMaybe } from "./products";
@@ -53,33 +54,64 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (ready) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   }, [entries, ready]);
 
+  // Revalida o carrinho salvo quando o catálogo/estoque é carregado ou atualizado.
+  useEffect(() => {
+    if (!products) return;
+    setEntries((prev) =>
+      prev.flatMap((entry) => {
+        const product = getProduct(products, entry.slug);
+        if (!product || product.stock <= 0) return [];
+        const quantity = Math.min(entry.quantity, product.stock);
+        return [{ ...entry, quantity }];
+      }),
+    );
+  }, [products]);
+
   const add = useCallback((slug: string, quantity = 1) => {
+    const product = getProduct(products ?? [], slug);
+    if (!product || product.stock <= 0) {
+      toast.error("Produto sem estoque disponível.");
+      return;
+    }
     setEntries((prev) => {
       const found = prev.find((e) => e.slug === slug);
-      if (found) return prev.map((e) => (e.slug === slug ? { ...e, quantity: Math.min(99, e.quantity + quantity) } : e));
-      return [...prev, { slug, quantity }];
+      const current = found?.quantity ?? 0;
+      const next = Math.min(product.stock, current + quantity);
+      if (next < current + quantity) {
+        toast.error(`Estoque disponível: apenas ${product.stock} unidade(s).`);
+      }
+      if (found) return prev.map((e) => (e.slug === slug ? { ...e, quantity: next } : e));
+      return [...prev, { slug, quantity: Math.min(product.stock, quantity) }];
     });
-  }, []);
+  }, [products]);
 
   const setQuantity = useCallback((slug: string, quantity: number) => {
+    if (quantity <= 0) {
+      setEntries((prev) => prev.filter((e) => e.slug !== slug));
+      return;
+    }
+    const product = getProduct(products ?? [], slug);
+    const safeQuantity = product ? Math.min(quantity, product.stock) : quantity;
+    if (product && quantity > product.stock) {
+      toast.error(`Estoque disponível para este produto: ${product.stock} unidade(s).`);
+    }
     setEntries((prev) =>
-      quantity <= 0
+      safeQuantity <= 0
         ? prev.filter((e) => e.slug !== slug)
-        : prev.map((e) => (e.slug === slug ? { ...e, quantity: Math.min(99, quantity) } : e)),
+        : prev.map((e) => (e.slug === slug ? { ...e, quantity: safeQuantity } : e)),
     );
-  }, []);
+  }, [products]);
 
   const remove = useCallback((slug: string) => setEntries((prev) => prev.filter((e) => e.slug !== slug)), []);
   const clear = useCallback(() => setEntries([]), []);
 
   const value = useMemo<CartContextValue>(() => {
     const list = products ?? [];
-    // Produtos removidos do catálogo somem do carrinho automaticamente.
     const lines: CartLine[] = entries.flatMap((e) => {
       const product = getProduct(list, e.slug);
-      return product
-        ? [{ product, name: product.name, sku: product.sku, price: product.price, quantity: e.quantity }]
-        : [];
+      if (!product || product.stock <= 0) return [];
+      const quantity = Math.min(e.quantity, product.stock);
+      return [{ product, name: product.name, sku: product.sku, price: product.price, quantity }];
     });
     const { total, items } = orderTotals(lines);
     return {
