@@ -159,7 +159,7 @@ const formSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome").max(160),
   slug: z.string().trim().min(2, "Informe o endereço").max(80).regex(/^[a-z0-9-]+$/, "Use só letras minúsculas, números e hífen"),
   brand: z.string().trim().min(1, "Informe a marca").max(60),
-  sku: z.string().trim().min(1, "Informe o código").max(40),
+  sku: z.string().trim().max(40).optional(),
   category: z.string().min(1),
   price: money.refine((v) => v > 0, "Informe o preço"),
   old_price: z.union([z.literal(""), money]).optional(),
@@ -169,7 +169,7 @@ const formSchema = z.object({
   short_description: z.string().trim().max(200),
   description: z.string().trim().max(4000),
   image_url: z.string().trim().min(1, "Envie uma foto ou informe o link da imagem"),
-  sort_order: z.coerce.number().int().min(0).max(10000),
+  sort_order: z.coerce.number().int().min(0).max(10000).optional(),
 });
 
 type FormState = {
@@ -251,10 +251,10 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
       const v = parsed.data;
       const oldPrice = v.old_price === "" || v.old_price == null ? null : Number(v.old_price);
       const payload = {
-        name: v.name, slug: v.slug, brand: v.brand, sku: v.sku, category: v.category,
+        name: v.name, slug: v.slug, brand: v.brand, sku: v.sku || `GT-${v.slug.toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`, category: v.category,
         price: v.price, old_price: oldPrice && oldPrice > v.price ? oldPrice : null,
         min_stock: v.min_stock, badge: v.badge || null, short_description: v.short_description,
-        description: v.description, image_url: v.image_url, sort_order: v.sort_order,
+        description: v.description, image_url: v.image_url, sort_order: v.sort_order ?? 100,
         specs: parseSpecs(form.specs), tags: form.tags, active: form.active,
       };
       if (isNew) {
