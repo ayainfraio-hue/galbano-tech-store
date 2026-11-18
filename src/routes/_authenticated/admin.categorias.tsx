@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, Plus, Save, Trash2 } from "lucide-react";
+import { Plus, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -83,14 +83,13 @@ function CategoriesPage() {
               <div className="min-w-0 flex-1">
                 <Label htmlFor={`category-${category.id}`} className="sr-only">Nome da categoria</Label>
                 <Input id={`category-${category.id}`} value={value.name} onChange={(e) => setEditing((old) => ({ ...old, [category.id]: { ...old[category.id], name: e.target.value } }))} className="h-9 border-transparent bg-transparent px-2 font-medium shadow-none hover:border-input focus-visible:border-input focus-visible:bg-white" />
-                <p className="px-2 text-xs text-muted-foreground">{category.active ? "Visível na loja" : "Oculta na loja"}</p>
               </div>
               <div className="w-20">
                 <Label htmlFor={`order-${category.id}`} className="sr-only">Ordem</Label>
                 <Input id={`order-${category.id}`} aria-label="Ordem de exibição" type="number" min={0} value={value.sort_order} onChange={(e) => setEditing((old) => ({ ...old, [category.id]: { ...old[category.id], sort_order: Number(e.target.value) } }))} className="h-9 text-center" />
               </div>
               {changed && <Button size="icon" variant="outline" className="h-9 w-9" aria-label={`Salvar ${category.name}`} onClick={() => save.mutate({ id: category.id, name: value.name, sort_order: value.sort_order })}><Save className="h-4 w-4" /></Button>}
-              <Button size="icon" variant="ghost" className="h-9 w-9" aria-label={category.active ? `Ocultar ${category.name}` : `Exibir ${category.name}`} onClick={() => save.mutate({ id: category.id, name: category.name, active: !category.active })}>{category.active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</Button>
+              <Button size="sm" variant="outline" className="h-9 min-w-[76px] px-3 text-xs" aria-label={category.active ? `Categoria ativa. Clique para ocultar ${category.name}` : `Categoria oculta. Clique para ativar ${category.name}`} onClick={() => save.mutate({ id: category.id, name: category.name, active: !category.active })}>{category.active ? "Ativa" : "Oculta"}</Button>
               <Button size="icon" variant="ghost" className="h-9 w-9 text-red-600 hover:text-red-700" aria-label={`Excluir ${category.name}`} onClick={() => { if (confirm(`Excluir a categoria ${category.name}?`)) save.mutate({ id: category.id, name: category.name, remove: true }); }}><Trash2 className="h-4 w-4" /></Button>
             </li>;
           })}
