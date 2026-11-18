@@ -15,7 +15,6 @@ import { useCart } from "@/lib/cart";
 import { WHATSAPP_DISPLAY, formatWhatsAppDisplay, whatsappUrl } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
 import { useStoreSettings } from "@/lib/store-content";
-import { useStoreSettings } from "@/lib/store-content";
 import { WhatsAppIcon } from "./WhatsAppIcon";
 
 function SearchForm({ className }: { className?: string }) {
