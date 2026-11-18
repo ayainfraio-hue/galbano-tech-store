@@ -98,7 +98,7 @@ export function CheckoutDialog({
       win?.close();
       const msg = err instanceof Error ? err.message : "";
       toast.error("Não foi possível registrar o pedido", {
-        description: /indispon|inválid|vazio|nome|telefone/i.test(msg) ? msg : "Tente novamente em instantes.",
+        description: /indispon|inválid|vazio|nome|telefone|estoque/i.test(msg) ? msg : "Tente novamente em instantes.",
       });
     } finally {
       setSubmitting(false);
