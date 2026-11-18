@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { productsByTag, type CategorySlug } from "@/data/catalog";
-import { useProducts } from "@/lib/products";
+import { useProductsMaybe } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import { ProductCarousel } from "./ProductCarousel";
 import { SectionTitle } from "./SectionTitle";
@@ -19,7 +19,7 @@ const tabs: { label: string; slug: CategorySlug | "todos" }[] = [
 
 export function BestSellers() {
   const [active, setActive] = useState<(typeof tabs)[number]["slug"]>("todos");
-  const all = productsByTag(useProducts(), "mais-vendido");
+  const all = productsByTag(useProductsMaybe() ?? [], "mais-vendido");
   const list = active === "todos" ? all : all.filter((p) => p.category === active);
 
   return (
