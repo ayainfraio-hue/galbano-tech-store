@@ -5,7 +5,7 @@ import { categories } from "@/data/catalog";
 export function CategoryStrip() {
   return (
     <section aria-label="Categorias" className="container-store">
-      <div className="scrollbar-none -mx-4 overflow-x-auto px-4">
+      <div className="scrollbar-none -mx-4 overflow-x-auto px-4 py-3">
         <ul className="flex w-max gap-4 sm:gap-5 lg:w-full lg:justify-between">
           {categories.map((c) => (
             <li key={c.slug}>
