@@ -1,6 +1,6 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, ChevronRight, ShieldCheck, ShoppingCart, Star, Truck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useAddToCart } from "@/components/store/ProductCard";
 import { ProductCarousel } from "@/components/store/ProductCarousel";
@@ -58,6 +58,11 @@ function ProductPage() {
   const [activeImage, setActiveImage] = useState(product.image);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const optionsComplete = product.variants.every((variant) => !!selectedOptions[variant.name]);
+  useEffect(() => {
+    setActiveImage(product.image);
+    setSelectedOptions({});
+    setQty(1);
+  }, [product.slug, product.image]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const addToCart = useAddToCart();
   const navigate = useNavigate();
