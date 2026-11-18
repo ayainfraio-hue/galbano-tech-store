@@ -1,6 +1,6 @@
 import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Boxes, ClipboardList, ExternalLink, Image, LayoutDashboard, LogOut, Package, Settings, Tags, ShieldAlert } from "lucide-react";
+import { Boxes, ClipboardList, ExternalLink, FolderTree, Image, LayoutDashboard, LogOut, Package, Settings, Tags, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +32,7 @@ const nav = [
   { to: "/admin/estoque", label: "Estoque", icon: Boxes, exact: false },
   { to: "/admin/galeria-clientes", label: "Galeria de clientes", icon: Image, exact: false },
   { to: "/admin/marcas", label: "Marcas", icon: Tags, exact: false },
+  { to: "/admin/categorias", label: "Categorias", icon: FolderTree, exact: false },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings, exact: false },
 ] as const;
 
