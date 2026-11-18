@@ -11,7 +11,7 @@ export function CategoryStrip() {
 
   return (
     <section aria-label="Categorias" className="container-store">
-      <div className="scrollbar-none -mx-4 overflow-x-auto px-4 py-3">
+      <div className="scrollbar-none -mx-4 overflow-x-auto px-4 pr-5 py-3">
         <ul className="flex w-max gap-4 sm:gap-5 lg:w-full lg:justify-between">
           {items.map((category) => (
             <li key={category.slug}>
