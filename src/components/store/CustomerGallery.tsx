@@ -12,7 +12,7 @@ export function CustomerGallery() {
   return (
     <section className="container-store">
       <SectionTitle eyebrow="Experiências reais" title="Quem compra, recomenda" />
-      <div className="scrollbar-none -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0">
+      <div className="scrollbar-none -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-3 sm:mx-0 sm:px-0">
         {items.map((item) => (
           <button key={item.id} type="button" onClick={() => setSelected(item)} className="group w-64 shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-panel text-left transition hover:-translate-y-1 hover:border-gold sm:w-72">
             <img src={item.image_url} alt={`Depoimento de ${item.customer_name}`} loading="lazy" className="h-56 w-full object-cover transition duration-500 group-hover:scale-[1.02]" />
