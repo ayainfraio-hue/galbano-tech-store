@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 
 export function useAddToCart() {
   const { add, setOpen } = useCart();
-  return (product: Product, quantity = 1) => {
-    add(product.slug, quantity);
+  return (product: Product, quantity = 1, options: Record<string, string> = {}) => {
+    add(product.slug, quantity, options);
     setOpen(true);
   };
 }
