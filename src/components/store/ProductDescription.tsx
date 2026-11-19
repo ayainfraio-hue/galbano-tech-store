@@ -17,13 +17,13 @@ export function ProductDescription({ content }: { content: string }) {
   let ordered = false;
   const flushParagraph = () => {
     if (!paragraph.length) return;
-    blocks.push(createElement("p", { key: \`p-\${blocks.length}\`, className: "mb-4 last:mb-0" }, paragraph.flatMap((line, i) => i ? [createElement("br", { key: \`br-\${i}\` }), ...inline(line)] : inline(line))));
+    blocks.push(createElement("p", { key: `p-${blocks.length}`, className: "mb-4 last:mb-0" }, paragraph.flatMap((line, i) => i ? [createElement("br", { key: `br-${i}` }), ...inline(line)] : inline(line))));
     paragraph = [];
   };
   const flushList = () => {
     if (!list.length) return;
     const Tag = ordered ? "ol" : "ul";
-    blocks.push(createElement(Tag, { key: \`list-\${blocks.length}\`, className: \`mb-4 space-y-1 pl-6 marker:text-gold \${ordered ? "list-decimal" : "list-disc"}\` }, list.map((item, i) => createElement("li", { key: i }, inline(item)))));
+    blocks.push(createElement(Tag, { key: `list-${blocks.length}`, className: `mb-4 space-y-1 pl-6 marker:text-gold ${ordered ? "list-decimal" : "list-disc"}` }, list.map((item, i) => createElement("li", { key: i }, inline(item)))));
     list = [];
   };
   lines.forEach((line) => {
@@ -33,8 +33,8 @@ export function ProductDescription({ content }: { content: string }) {
     if (!line.trim()) { flushParagraph(); flushList(); return; }
     if (heading) {
       flushParagraph(); flushList();
-      const Tag = (\`h\${heading[1].length + 1}\`) as "h2" | "h3" | "h4";
-      blocks.push(createElement(Tag, { key: \`h-\${blocks.length}\`, className: "mb-3 mt-5 font-semibold text-foreground first:mt-0" }, inline(heading[2])));
+      const Tag = (`h${heading[1].length + 1}`) as "h2" | "h3" | "h4";
+      blocks.push(createElement(Tag, { key: `h-${blocks.length}`, className: "mb-3 mt-5 font-semibold text-foreground first:mt-0" }, inline(heading[2])));
     } else if (unordered || numbered) {
       flushParagraph();
       const isOrdered = Boolean(numbered);
