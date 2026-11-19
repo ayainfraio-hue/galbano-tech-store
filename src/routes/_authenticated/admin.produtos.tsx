@@ -185,7 +185,7 @@ function toForm(p: ProductRow | null): FormState {
     category: p?.category ?? categories[0]?.slug ?? "smartphones", price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "",
     stock: p ? String(p.stock) : "0", min_stock: p ? String(p.min_stock) : "3", badge: p?.badge ?? "",
     short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: p?.image_url ?? "",
-    gallery_urls: Array.isArray(p?.gallery_urls) && p.gallery_urls.length ? p.gallery_urls : (p?.image_url ? [p.image_url] : []),
+    gallery_urls: (() => { const urls = Array.isArray(p?.gallery_urls) ? p.gallery_urls.filter((url): url is string => typeof url === "string") : []; return urls.length ? urls : (p?.image_url ? [p.image_url] : []); })(),
     sort_order: p ? String(p.sort_order) : "100", specs, tags: (p?.tags ?? []) as ProductTag[], active: p?.active ?? true,
   };
 }
