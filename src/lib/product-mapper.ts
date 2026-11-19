@@ -18,7 +18,7 @@ export function mapProductRow(row: ProductRow): Product {
     sku: row.sku,
     category: row.category as CategorySlug,
     image: row.image_url,
-    gallery: Array.isArray(row.gallery_urls) && row.gallery_urls.length ? row.gallery_urls : [row.image_url],
+    gallery: (() => { const urls = Array.isArray(row.gallery_urls) ? row.gallery_urls.filter((url): url is string => typeof url === "string") : []; return urls.length ? urls : [row.image_url]; })(),
     price: Number(row.price),
     oldPrice: row.old_price != null && Number(row.old_price) > Number(row.price) ? Number(row.old_price) : undefined,
     rating: Number(row.rating),
