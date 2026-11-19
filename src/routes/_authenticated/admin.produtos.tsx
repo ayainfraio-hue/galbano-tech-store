@@ -259,19 +259,24 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
     const previews: string[] = [];
     for (const file of valid) {
       const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = \`products/\${crypto.randomUUID()}.\${ext}\`;
+      const path = `products/${crypto.randomUUID()}.${ext}`;
       const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
-      if (error) { toast.error(\`Falha ao enviar \${file.name}\`); continue; }
-      const { data, error: signError } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (signError || !data) { toast.error(\`Falha ao gerar link de \${file.name}\`); continue; }
-      uploaded.push(data.signedUrl);
+      if (error) { toast.error(`Falha ao enviar ${file.name}`); continue; }
+      const { data, error: signError } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60);
+      if (signError || !data) {
+        await supabase.storage.from("product-images").remove([path]);
+        toast.error(`Falha ao gerar prévia de ${file.name}`);
+        continue;
+      }
+      uploaded.push(path);
+      previews.push(data.signedUrl);
     }
     if (uploaded.length) {
       const gallery = [...form.gallery_urls, ...uploaded];
       set("gallery_urls", gallery);
       setPreviewUrls((current) => [...current, ...previews]);
       set("image_url", gallery[0]);
-      toast.success(uploaded.length === 1 ? "Imagem enviada" : \`\${uploaded.length} imagens enviadas\`);
+      toast.success(uploaded.length === 1 ? "Imagem enviada" : `${uploaded.length} imagens enviadas`);
     }
     setUploading(false);
   }
@@ -393,11 +398,11 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
           <Field label="Fotos do produto" className="sm:col-span-2">
             <div className="flex flex-wrap items-start gap-3">
               {form.gallery_urls.map((url, index) => <div key={url} className="relative w-24">
-                <div className={cn("grid h-24 place-items-center overflow-hidden rounded-xl border bg-surface", index === 0 ? "border-gold" : "border-border")}><img src={url} alt={\`Foto \${index + 1}\`} className="h-full w-full object-contain p-1" /></div>
+                <div className={cn("grid h-24 place-items-center overflow-hidden rounded-xl border bg-surface", index === 0 ? "border-gold" : "border-border")}><img src={url} alt={`Foto ${index + 1}`} className="h-full w-full object-contain p-1" /></div>
                 <div className="mt-1 flex justify-center gap-1">
                   <button type="button" className="text-xs text-muted-foreground disabled:opacity-30" disabled={index === 0} onClick={() => moveImage(url, -1)} aria-label="Mover foto para a esquerda">←</button>
                   <button type="button" className="text-xs text-muted-foreground disabled:opacity-30" disabled={index === form.gallery_urls.length - 1} onClick={() => moveImage(url, 1)} aria-label="Mover foto para a direita">→</button>
-                  <button type="button" className="text-xs text-destructive" onClick={() => removeImage(url)} aria-label={\`Remover foto \${index + 1}\`}>×</button>
+                  <button type="button" className="text-xs text-destructive" onClick={() => removeImage(url)} aria-label={`Remover foto ${index + 1}`}>×</button>
                 </div>
                 {index === 0 && <p className="text-center text-[10px] font-semibold text-gold">Capa</p>}
               </div>)}
