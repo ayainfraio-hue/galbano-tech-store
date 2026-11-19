@@ -180,14 +180,15 @@ type FormState = {
 
 function toForm(p: ProductRow | null): FormState {
   const specs = Array.isArray(p?.specs) ? (p!.specs as [string, string][]).map(([k, v]) => `${k}: ${v}`).join("\n") : "";
+  const savedGallery = Array.isArray(p?.gallery_urls)
+    ? p.gallery_urls.filter((url): url is string => typeof url === "string")
+    : [];
   return {
     name: p?.name ?? "", slug: p?.slug ?? "", brand: p?.brand ?? "", sku: p?.sku ?? "",
     category: p?.category ?? categories[0]?.slug ?? "smartphones", price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "",
     stock: p ? String(p.stock) : "0", min_stock: p ? String(p.min_stock) : "3", badge: p?.badge ?? "",
     short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: p?.image_url ?? "",
-    gallery_urls: Array.isArray((p as ProductRow & { gallery_urls?: unknown } | null)?.gallery_urls)
-      ? ((p as ProductRow & { gallery_urls: unknown[] }).gallery_urls.filter((url): url is string => typeof url === "string"))
-      : (p?.image_url ? [p.image_url] : []),
+    gallery_urls: savedGallery.length ? savedGallery : (p?.image_url ? [p.image_url] : []),
     sort_order: p ? String(p.sort_order) : "100", specs, tags: (p?.tags ?? []) as ProductTag[], active: p?.active ?? true,
   };
 }
