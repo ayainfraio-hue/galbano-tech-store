@@ -45,7 +45,10 @@ function ProductsPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("products").select("*").order("sort_order").order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      const paths = [...new Set((data ?? []).map((p) => storagePath(p.image_url)).filter((path): path is string => Boolean(path)))];
+      const { data: signed } = paths.length ? await supabase.storage.from("product-images").createSignedUrls(paths, 3600) : { data: [] };
+      const urls = new Map((signed ?? []).filter((item) => item.path && item.signedUrl).map((item) => [item.path!, item.signedUrl!]));
+      return (data ?? []).map((p) => ({ ...p, image_url: urls.get(storagePath(p.image_url) ?? "") ?? p.image_url }));
     },
   });
 
@@ -178,6 +181,16 @@ type FormState = {
   sort_order: string; specs: string; tags: ProductTag[]; active: boolean;
 };
 
+function storagePath(value: string): string | null {
+  if (value.startsWith("products/")) return value;
+  try {
+    const url = new URL(value);
+    const marker = "/storage/v1/object/sign/product-images/";
+    const index = url.pathname.indexOf(marker);
+    return index >= 0 ? decodeURIComponent(url.pathname.slice(index + marker.length)) : null;
+  } catch { return null; }
+}
+
 function toForm(p: ProductRow | null): FormState {
   const specs = Array.isArray(p?.specs) ? (p!.specs as [string, string][]).map(([k, v]) => `${k}: ${v}`).join("\n") : "";
   return {
@@ -185,7 +198,7 @@ function toForm(p: ProductRow | null): FormState {
     category: p?.category ?? categories[0]?.slug ?? "smartphones", price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "",
     stock: p ? String(p.stock) : "0", min_stock: p ? String(p.min_stock) : "3", badge: p?.badge ?? "",
     short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: p?.image_url ?? "",
-    gallery_urls: (() => { const urls = Array.isArray(p?.gallery_urls) ? p.gallery_urls.filter((url): url is string => typeof url === "string") : []; return urls.length ? urls : (p?.image_url ? [p.image_url] : []); })(),
+    gallery_urls: (() => { const urls = Array.isArray(p?.gallery_urls) ? p.gallery_urls.filter((url): url is string => typeof url === "string").map((url) => storagePath(url) ?? url) : []; return urls.length ? urls : (p?.image_url ? [storagePath(p.image_url) ?? p.image_url] : []); })(),
     sort_order: p ? String(p.sort_order) : "100", specs, tags: (p?.tags ?? []) as ProductTag[], active: p?.active ?? true,
   };
 }
@@ -209,6 +222,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
   const [form, setForm] = useState<FormState>(toForm(null));
   const [slugTouched, setSlugTouched] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const categoryOptions = useQuery({
     queryKey: ["store-categories"],
     queryFn: async () => {
@@ -220,9 +234,16 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
 
   useEffect(() => {
     if (product) {
-      setForm(toForm(row));
+      const next = toForm(row);
+      setForm(next);
       setSlugTouched(!isNew);
-    }
+      void (async () => {
+        const paths = next.gallery_urls.filter((item) => item.startsWith("products/"));
+        const { data } = paths.length ? await supabase.storage.from("product-images").createSignedUrls(paths, 3600) : { data: [] };
+        const signed = new Map((data ?? []).filter((item) => item.path && item.signedUrl).map((item) => [item.path!, item.signedUrl!]));
+        setPreviewUrls(next.gallery_urls.map((item) => signed.get(item) ?? item));
+      })();
+    } else { setPreviewUrls([]); }
   }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }));
@@ -235,6 +256,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
     if (!valid.length) return;
     setUploading(true);
     const uploaded: string[] = [];
+    const previews: string[] = [];
     for (const file of valid) {
       const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const path = \`products/\${crypto.randomUUID()}.\${ext}\`;
@@ -247,14 +269,17 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
     if (uploaded.length) {
       const gallery = [...form.gallery_urls, ...uploaded];
       set("gallery_urls", gallery);
+      setPreviewUrls((current) => [...current, ...previews]);
       set("image_url", gallery[0]);
       toast.success(uploaded.length === 1 ? "Imagem enviada" : \`\${uploaded.length} imagens enviadas\`);
     }
     setUploading(false);
   }
   function removeImage(url: string) {
+    const index = form.gallery_urls.indexOf(url);
     const gallery = form.gallery_urls.filter((item) => item !== url);
     set("gallery_urls", gallery);
+    setPreviewUrls((current) => current.filter((_, i) => i !== index));
     set("image_url", gallery[0] ?? "");
   }
   function moveImage(url: string, direction: -1 | 1) {
@@ -263,6 +288,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
     const gallery = [...form.gallery_urls];
     [gallery[index], gallery[next]] = [gallery[next], gallery[index]];
     set("gallery_urls", gallery);
+    setPreviewUrls((current) => { const nextUrls = [...current]; [nextUrls[index], nextUrls[next]] = [nextUrls[next], nextUrls[index]]; return nextUrls; });
     set("image_url", gallery[0] ?? "");
   }
 
