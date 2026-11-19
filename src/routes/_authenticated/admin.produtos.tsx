@@ -174,7 +174,7 @@ const formSchema = z.object({
 
 type FormState = {
   name: string; slug: string; brand: string; sku: string; category: string; price: string; old_price: string;
-  stock: string; min_stock: string; badge: string; short_description: string; description: string; image_url: string;
+  stock: string; min_stock: string; badge: string; short_description: string; description: string; image_url: string; gallery_urls: string[];
   sort_order: string; specs: string; tags: ProductTag[]; active: boolean;
 };
 
@@ -185,6 +185,9 @@ function toForm(p: ProductRow | null): FormState {
     category: p?.category ?? categories[0]?.slug ?? "smartphones", price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "",
     stock: p ? String(p.stock) : "0", min_stock: p ? String(p.min_stock) : "3", badge: p?.badge ?? "",
     short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: p?.image_url ?? "",
+    gallery_urls: Array.isArray((p as ProductRow & { gallery_urls?: unknown } | null)?.gallery_urls)
+      ? ((p as ProductRow & { gallery_urls: unknown[] }).gallery_urls.filter((url): url is string => typeof url === "string"))
+      : (p?.image_url ? [p.image_url] : []),
     sort_order: p ? String(p.sort_order) : "100", specs, tags: (p?.tags ?? []) as ProductTag[], active: p?.active ?? true,
   };
 }
@@ -239,9 +242,15 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
     }
     // Pasta privada: geramos um link assinado de longa duração para exibir na loja.
     const { data, error: signError } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+    if (signError || !data) {
+      setUploading(false);
+      return void toast.error("Falha ao gerar o link da imagem");
+    }
+    setForm((current) => {
+      const gallery = [...current.gallery_urls, data.signedUrl];
+      return { ...current, gallery_urls: gallery, image_url: gallery[0] ?? current.image_url };
+    });
     setUploading(false);
-    if (signError || !data) return void toast.error("Falha ao gerar o link da imagem");
-    set("image_url", data.signedUrl);
   }
 
   const save = useMutation({
@@ -254,7 +263,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
         name: v.name, slug: v.slug, brand: v.brand, sku: v.sku || `GT-${v.slug.toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`, category: v.category,
         price: v.price, old_price: oldPrice && oldPrice > v.price ? oldPrice : null,
         min_stock: v.min_stock, badge: v.badge || null, short_description: v.short_description,
-        description: v.description, image_url: v.image_url, sort_order: v.sort_order ?? 100,
+        description: v.description, image_url: form.gallery_urls[0] ?? v.image_url, gallery_urls: form.gallery_urls.length ? form.gallery_urls : [v.image_url], sort_order: v.sort_order ?? 100,
         specs: parseSpecs(form.specs), tags: form.tags, active: form.active,
       };
       if (isNew) {
@@ -342,18 +351,27 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
             <Input value={form.badge} maxLength={30} placeholder="Ex.: Novo, Exclusivo" onChange={(e) => set("badge", e.target.value)} />
           </Field>
 
-          <Field label="Foto do produto" className="sm:col-span-2">
-            <div className="flex items-center gap-3">
-              <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface">
-                {form.image_url ? <img src={form.image_url} alt="" className="h-full w-full object-contain p-1" /> : <ImagePlus className="h-6 w-6 text-surface-muted-foreground" />}
+          <Field label="Fotos do produto" className="sm:col-span-2">
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-3">
+                {form.gallery_urls.map((url, index) => (
+                  <div key={`${url}-${index}`} className="relative h-24 w-24 overflow-hidden rounded-xl border border-border bg-surface">
+                    <img src={url} alt={`Foto ${index + 1} do produto`} className="h-full w-full object-contain p-1" />
+                    {index === 0 && <span className="absolute inset-x-0 bottom-0 bg-ink/80 px-1 py-0.5 text-center text-[10px] font-semibold text-gold">Capa</span>}
+                    <button type="button" aria-label={`Remover foto ${index + 1}`} onClick={() => setForm((current) => {
+                      const gallery = current.gallery_urls.filter((_, i) => i !== index);
+                      return { ...current, gallery_urls: gallery, image_url: gallery[0] ?? "" };
+                    })} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-ink/80 text-white hover:bg-destructive"><Trash2 className="h-3 w-3" /></button>
+                  </div>
+                ))}
+                {form.gallery_urls.length === 0 && <div className="grid h-24 w-24 place-items-center rounded-xl bg-surface"><ImagePlus className="h-6 w-6 text-surface-muted-foreground" /></div>}
               </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <label className={cn("inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold/60 px-4 py-2 text-sm text-gold hover:bg-gold hover:text-primary-foreground", uploading && "pointer-events-none opacity-60")}>
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                  {uploading ? "Enviando…" : "Enviar foto"}
-                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
-                </label>
-              </div>
+              <label className={cn("inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold/60 px-4 py-2 text-sm text-gold hover:bg-gold hover:text-primary-foreground", uploading && "pointer-events-none opacity-60")}>
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                {uploading ? "Enviando…" : "Adicionar fotos"}
+                <input type="file" accept="image/*" multiple className="sr-only" onChange={async (e) => { const files = Array.from(e.target.files ?? []); for (const file of files) await upload(file); e.target.value = ""; }} />
+              </label>
+              <p className="text-xs text-muted-foreground">Você pode selecionar várias fotos. A primeira será a imagem principal da vitrine.</p>
             </div>
           </Field>
 
