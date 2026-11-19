@@ -89,7 +89,7 @@ function ProductPage() {
             <button type="button" aria-label="Foto anterior" onClick={() => setActiveImage((i) => (i - 1 + gallery.length) % gallery.length)} className="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-sm"><ChevronLeft className="h-5 w-5" /></button>
             <button type="button" aria-label="Próxima foto" onClick={() => setActiveImage((i) => (i + 1) % gallery.length)} className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-sm"><ChevronRight className="h-5 w-5" /></button>
             <div className="mt-4 flex justify-center gap-2 overflow-x-auto">
-              {gallery.map((url, index) => <button key={url} type="button" onClick={() => setActiveImage(index)} aria-label={\`Ver foto \${index + 1}\`} aria-pressed={activeImage === index} className={\`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-background p-1 \${activeImage === index ? "border-gold" : "border-transparent opacity-70"}\`}><img src={url} alt="" className="h-full w-full object-contain" /></button>)}
+              {gallery.map((url, index) => <button key={url} type="button" onClick={() => setActiveImage(index)} aria-label={`Ver foto ${index + 1}`} aria-pressed={activeImage === index} className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-background p-1 ${activeImage === index ? "border-gold" : "border-transparent opacity-70"}`}><img src={url} alt="" className="h-full w-full object-contain" /></button>)}
             </div>
           </>}
         </div>
