@@ -398,7 +398,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
           <Field label="Fotos do produto" className="sm:col-span-2">
             <div className="flex flex-wrap items-start gap-3">
               {form.gallery_urls.map((url, index) => <div key={url} className="relative w-24">
-                <div className={cn("grid h-24 place-items-center overflow-hidden rounded-xl border bg-surface", index === 0 ? "border-gold" : "border-border")}><img src={url} alt={`Foto ${index + 1}`} className="h-full w-full object-contain p-1" /></div>
+                <div className={cn("grid h-24 place-items-center overflow-hidden rounded-xl border bg-surface", index === 0 ? "border-gold" : "border-border")}><img src={previewUrls[index] ?? url} alt={`Foto ${index + 1}`} className="h-full w-full object-contain p-1" /></div>
                 <div className="mt-1 flex justify-center gap-1">
                   <button type="button" className="text-xs text-muted-foreground disabled:opacity-30" disabled={index === 0} onClick={() => moveImage(url, -1)} aria-label="Mover foto para a esquerda">←</button>
                   <button type="button" className="text-xs text-muted-foreground disabled:opacity-30" disabled={index === form.gallery_urls.length - 1} onClick={() => moveImage(url, 1)} aria-label="Mover foto para a direita">→</button>
