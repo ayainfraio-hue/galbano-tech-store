@@ -1,9 +1,10 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, ChevronRight, ShieldCheck, ShoppingCart, Star, Truck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useAddToCart } from "@/components/store/ProductCard";
 import { ProductCarousel } from "@/components/store/ProductCarousel";
+import { MarkdownDescription } from "@/components/store/MarkdownDescription";
 import { QuantityStepper } from "@/components/store/QuantityStepper";
 import { SectionTitle } from "@/components/store/SectionTitle";
 import { WhatsAppIcon } from "@/components/store/WhatsAppIcon";
@@ -53,6 +54,9 @@ function ProductPage() {
   const products = useProducts();
   const product = getProduct(products, loaded.slug) ?? loaded;
   const [qty, setQty] = useState(1);
+  const images = product.images?.length ? product.images : [product.image];
+  const [activeImage, setActiveImage] = useState(images[0] ?? product.image);
+  useEffect(() => setActiveImage(images[0] ?? product.image), [product.slug, product.image]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const addToCart = useAddToCart();
   const navigate = useNavigate();
@@ -79,17 +83,35 @@ function ProductPage() {
       </nav>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
-        <div className="relative overflow-hidden rounded-3xl border border-surface-border bg-surface p-6 sm:p-10">
-          {off > 0 && (
-            <span className="absolute left-5 top-5 rounded-md bg-ink px-2.5 py-1 text-xs font-bold text-gold">-{off}% OFF</span>
+        <div className="min-w-0">
+          <div className="relative overflow-hidden rounded-3xl border border-surface-border bg-surface p-6 sm:p-10">
+            {off > 0 && (
+              <span className="absolute left-5 top-5 z-10 rounded-md bg-ink px-2.5 py-1 text-xs font-bold text-gold">-{off}% OFF</span>
+            )}
+            <img
+              src={activeImage}
+              alt={product.name}
+              width={816}
+              height={816}
+              className="mx-auto aspect-square w-full max-w-lg object-contain mix-blend-multiply"
+            />
+          </div>
+          {images.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-2" aria-label="Galeria de fotos do produto">
+              {images.map((image, index) => (
+                <button
+                  key={image + index}
+                  type="button"
+                  onClick={() => setActiveImage(image)}
+                  aria-label={`Ver foto ${index + 1} de ${images.length}`}
+                  aria-pressed={activeImage === image}
+                  className={`h-20 w-20 overflow-hidden rounded-xl border bg-surface p-2 transition ${activeImage === image ? "border-gold ring-2 ring-gold/30" : "border-surface-border hover:border-gold/60"}`}
+                >
+                  <img src={image} alt="" className="h-full w-full object-contain" loading="lazy" />
+                </button>
+              ))}
+            </div>
           )}
-          <img
-            src={product.image}
-            alt={product.name}
-            width={816}
-            height={816}
-            className="mx-auto aspect-square w-full max-w-lg object-contain mix-blend-multiply"
-          />
         </div>
 
         <div className="flex flex-col">
@@ -186,7 +208,7 @@ function ProductPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="descricao" className="mt-6 max-w-3xl leading-relaxed text-muted-foreground">
-          {product.description}
+          <MarkdownDescription content={product.description} />
         </TabsContent>
         <TabsContent value="especificacoes" className="mt-6">
           <dl className="max-w-3xl overflow-hidden rounded-2xl border border-border">
