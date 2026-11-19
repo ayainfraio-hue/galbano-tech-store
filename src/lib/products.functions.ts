@@ -35,9 +35,9 @@ export const listStoreProducts = createServerFn({ method: "GET" }).handler(async
     global: {
       fetch: (input, init) => {
         const h = new Headers(init?.headers);
-        if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+        if ((key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) || serviceKey?.startsWith("sb_")) h.delete("Authorization");
         h.set("apikey", serviceKey || key);
-        if (serviceKey) h.set("Authorization", `Bearer ${serviceKey}`);
+        if (serviceKey && !serviceKey.startsWith("sb_")) h.set("Authorization", `Bearer ${serviceKey}`);
         return fetch(input, { ...init, headers: h });
       },
     },
