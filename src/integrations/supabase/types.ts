@@ -126,7 +126,7 @@ export type Database = {
           description: string
           id: string
           image_url: string
-          gallery_urls: string[]
+          gallery_urls: Json
           min_stock: number
           name: string
           old_price: number | null
@@ -151,7 +151,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string
-          gallery_urls?: string[]
+          gallery_urls?: Json
           min_stock?: number
           name: string
           old_price?: number | null
