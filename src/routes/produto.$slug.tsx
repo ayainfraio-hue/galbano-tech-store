@@ -1,7 +1,6 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
-import { BadgeCheck, ChevronRight, ShieldCheck, ShoppingCart, Star, Truck } from "lucide-react";
+import { BadgeCheck, ChevronLeft, ChevronRight, ShieldCheck, ShoppingCart, Star, Truck } from "lucide-react";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductDescription } from "@/components/store/ProductDescription";
 
 import { useAddToCart } from "@/components/store/ProductCard";
