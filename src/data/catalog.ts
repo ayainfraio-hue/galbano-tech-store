@@ -35,6 +35,7 @@ export interface Product {
   sku: string;
   category: CategorySlug;
   image: string;
+  gallery?: string[];
   /** Preço de venda. */
   price: number;
   oldPrice?: number | undefined;

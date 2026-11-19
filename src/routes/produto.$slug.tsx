@@ -1,6 +1,8 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, ChevronRight, ShieldCheck, ShoppingCart, Star, Truck } from "lucide-react";
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ProductDescription } from "@/components/store/ProductDescription";
 
 import { useAddToCart } from "@/components/store/ProductCard";
 import { ProductCarousel } from "@/components/store/ProductCarousel";
@@ -53,6 +55,8 @@ function ProductPage() {
   const products = useProducts();
   const product = getProduct(products, loaded.slug) ?? loaded;
   const [qty, setQty] = useState(1);
+  const gallery = product.gallery?.length ? product.gallery : [product.image];
+  const [activeImage, setActiveImage] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const addToCart = useAddToCart();
   const navigate = useNavigate();
@@ -80,16 +84,15 @@ function ProductPage() {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
         <div className="relative overflow-hidden rounded-3xl border border-surface-border bg-surface p-6 sm:p-10">
-          {off > 0 && (
-            <span className="absolute left-5 top-5 rounded-md bg-ink px-2.5 py-1 text-xs font-bold text-gold">-{off}% OFF</span>
-          )}
-          <img
-            src={product.image}
-            alt={product.name}
-            width={816}
-            height={816}
-            className="mx-auto aspect-square w-full max-w-lg object-contain mix-blend-multiply"
-          />
+          {off > 0 && <span className="absolute left-5 top-5 z-10 rounded-md bg-ink px-2.5 py-1 text-xs font-bold text-gold">-{off}% OFF</span>}
+          <img src={gallery[activeImage] ?? product.image} alt={product.name} width={816} height={816} className="mx-auto aspect-square w-full max-w-lg object-contain mix-blend-multiply" />
+          {gallery.length > 1 && <>
+            <button type="button" aria-label="Foto anterior" onClick={() => setActiveImage((i) => (i - 1 + gallery.length) % gallery.length)} className="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-sm"><ChevronLeft className="h-5 w-5" /></button>
+            <button type="button" aria-label="Próxima foto" onClick={() => setActiveImage((i) => (i + 1) % gallery.length)} className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-sm"><ChevronRight className="h-5 w-5" /></button>
+            <div className="mt-4 flex justify-center gap-2 overflow-x-auto">
+              {gallery.map((url, index) => <button key={url} type="button" onClick={() => setActiveImage(index)} aria-label={\`Ver foto \${index + 1}\`} aria-pressed={activeImage === index} className={\`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-background p-1 \${activeImage === index ? "border-gold" : "border-transparent opacity-70"}\`}><img src={url} alt="" className="h-full w-full object-contain" /></button>)}
+            </div>
+          </>}
         </div>
 
         <div className="flex flex-col">
@@ -186,7 +189,7 @@ function ProductPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="descricao" className="mt-6 max-w-3xl leading-relaxed text-muted-foreground">
-          {product.description}
+          <ProductDescription content={product.description} />
         </TabsContent>
         <TabsContent value="especificacoes" className="mt-6">
           <dl className="max-w-3xl overflow-hidden rounded-2xl border border-border">

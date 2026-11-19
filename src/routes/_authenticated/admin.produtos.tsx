@@ -174,7 +174,7 @@ const formSchema = z.object({
 
 type FormState = {
   name: string; slug: string; brand: string; sku: string; category: string; price: string; old_price: string;
-  stock: string; min_stock: string; badge: string; short_description: string; description: string; image_url: string;
+  stock: string; min_stock: string; badge: string; short_description: string; description: string; image_url: string; gallery_urls: string[];
   sort_order: string; specs: string; tags: ProductTag[]; active: boolean;
 };
 
@@ -185,6 +185,7 @@ function toForm(p: ProductRow | null): FormState {
     category: p?.category ?? categories[0]?.slug ?? "smartphones", price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "",
     stock: p ? String(p.stock) : "0", min_stock: p ? String(p.min_stock) : "3", badge: p?.badge ?? "",
     short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: p?.image_url ?? "",
+    gallery_urls: Array.isArray(p?.gallery_urls) && p.gallery_urls.length ? p.gallery_urls : (p?.image_url ? [p.image_url] : []),
     sort_order: p ? String(p.sort_order) : "100", specs, tags: (p?.tags ?? []) as ProductTag[], active: p?.active ?? true,
   };
 }
@@ -226,22 +227,43 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }));
 
-  async function upload(file: File): Promise<void> {
-    if (!file.type.startsWith("image/")) return void toast.error("Escolha um arquivo de imagem");
-    if (file.size > 5 * 1024 * 1024) return void toast.error("A imagem deve ter até 5 MB");
+  async function upload(files: FileList | File[]): Promise<void> {
+    const selected = Array.from(files);
+    if (!selected.length) return;
+    const valid = selected.filter((file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024);
+    if (valid.length !== selected.length) toast.error("Algumas imagens foram ignoradas: use arquivos de imagem de até 5 MB");
+    if (!valid.length) return;
     setUploading(true);
-    const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `products/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
-    if (error) {
-      setUploading(false);
-      return void toast.error("Falha ao enviar a imagem");
+    const uploaded: string[] = [];
+    for (const file of valid) {
+      const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = \`products/\${crypto.randomUUID()}.\${ext}\`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+      if (error) { toast.error(\`Falha ao enviar \${file.name}\`); continue; }
+      const { data, error: signError } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signError || !data) { toast.error(\`Falha ao gerar link de \${file.name}\`); continue; }
+      uploaded.push(data.signedUrl);
     }
-    // Pasta privada: geramos um link assinado de longa duração para exibir na loja.
-    const { data, error: signError } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+    if (uploaded.length) {
+      const gallery = [...form.gallery_urls, ...uploaded];
+      set("gallery_urls", gallery);
+      set("image_url", gallery[0]);
+      toast.success(uploaded.length === 1 ? "Imagem enviada" : \`\${uploaded.length} imagens enviadas\`);
+    }
     setUploading(false);
-    if (signError || !data) return void toast.error("Falha ao gerar o link da imagem");
-    set("image_url", data.signedUrl);
+  }
+  function removeImage(url: string) {
+    const gallery = form.gallery_urls.filter((item) => item !== url);
+    set("gallery_urls", gallery);
+    set("image_url", gallery[0] ?? "");
+  }
+  function moveImage(url: string, direction: -1 | 1) {
+    const index = form.gallery_urls.indexOf(url), next = index + direction;
+    if (index < 0 || next < 0 || next >= form.gallery_urls.length) return;
+    const gallery = [...form.gallery_urls];
+    [gallery[index], gallery[next]] = [gallery[next], gallery[index]];
+    set("gallery_urls", gallery);
+    set("image_url", gallery[0] ?? "");
   }
 
   const save = useMutation({
@@ -254,7 +276,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
         name: v.name, slug: v.slug, brand: v.brand, sku: v.sku || `GT-${v.slug.toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`, category: v.category,
         price: v.price, old_price: oldPrice && oldPrice > v.price ? oldPrice : null,
         min_stock: v.min_stock, badge: v.badge || null, short_description: v.short_description,
-        description: v.description, image_url: v.image_url, sort_order: v.sort_order ?? 100,
+        description: v.description, image_url: form.gallery_urls[0] ?? v.image_url, gallery_urls: form.gallery_urls, sort_order: v.sort_order ?? 100,
         specs: parseSpecs(form.specs), tags: form.tags, active: form.active,
       };
       if (isNew) {
@@ -342,19 +364,24 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
             <Input value={form.badge} maxLength={30} placeholder="Ex.: Novo, Exclusivo" onChange={(e) => set("badge", e.target.value)} />
           </Field>
 
-          <Field label="Foto do produto" className="sm:col-span-2">
-            <div className="flex items-center gap-3">
-              <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface">
-                {form.image_url ? <img src={form.image_url} alt="" className="h-full w-full object-contain p-1" /> : <ImagePlus className="h-6 w-6 text-surface-muted-foreground" />}
-              </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <label className={cn("inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold/60 px-4 py-2 text-sm text-gold hover:bg-gold hover:text-primary-foreground", uploading && "pointer-events-none opacity-60")}>
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                  {uploading ? "Enviando…" : "Enviar foto"}
-                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
-                </label>
-              </div>
+          <Field label="Fotos do produto" className="sm:col-span-2">
+            <div className="flex flex-wrap items-start gap-3">
+              {form.gallery_urls.map((url, index) => <div key={url} className="relative w-24">
+                <div className={cn("grid h-24 place-items-center overflow-hidden rounded-xl border bg-surface", index === 0 ? "border-gold" : "border-border")}><img src={url} alt={\`Foto \${index + 1}\`} className="h-full w-full object-contain p-1" /></div>
+                <div className="mt-1 flex justify-center gap-1">
+                  <button type="button" className="text-xs text-muted-foreground disabled:opacity-30" disabled={index === 0} onClick={() => moveImage(url, -1)} aria-label="Mover foto para a esquerda">←</button>
+                  <button type="button" className="text-xs text-muted-foreground disabled:opacity-30" disabled={index === form.gallery_urls.length - 1} onClick={() => moveImage(url, 1)} aria-label="Mover foto para a direita">→</button>
+                  <button type="button" className="text-xs text-destructive" onClick={() => removeImage(url)} aria-label={\`Remover foto \${index + 1}\`}>×</button>
+                </div>
+                {index === 0 && <p className="text-center text-[10px] font-semibold text-gold">Capa</p>}
+              </div>)}
+              <label className={cn("grid h-24 w-24 cursor-pointer place-items-center rounded-xl border border-dashed border-gold/60 text-gold hover:bg-gold/5", uploading && "pointer-events-none opacity-60")}>
+                {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-6 w-6" />}
+                <span className="text-xs">{uploading ? "Enviando…" : "Adicionar fotos"}</span>
+                <input type="file" accept="image/*" multiple className="sr-only" disabled={uploading} onChange={(e) => { if (e.target.files) upload(e.target.files); e.target.value = ""; }} />
+              </label>
             </div>
+            <p className="mt-2 text-xs text-muted-foreground">A primeira foto é a capa. Você pode enviar várias imagens (até 5 MB cada) e alterar a ordem.</p>
           </Field>
 
           <Field label="Vitrines" className="sm:col-span-2">
@@ -374,7 +401,8 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
             <Input value={form.short_description} maxLength={200} onChange={(e) => set("short_description", e.target.value)} />
           </Field>
           <Field label="Descrição" className="sm:col-span-2">
-            <Textarea rows={4} value={form.description} maxLength={4000} onChange={(e) => set("description", e.target.value)} />
+            <Textarea rows={6} value={form.description} maxLength={4000} placeholder={"**ESPECIFICAÇÕES**\n\n- Tela: 6,7 polegadas\n- Memória: 256 GB"} onChange={(e) => set("description", e.target.value)} />
+            <p className="mt-1 text-xs text-muted-foreground">Aceita Markdown: **negrito**, *itálico*, títulos (#), listas (-) e quebras de linha.</p>
           </Field>
           <Field label="Especificações (uma por linha, “Nome: valor”)" className="sm:col-span-2">
             <Textarea rows={4} value={form.specs} placeholder={"Tela: 6.7\" AMOLED\nMemória: 256 GB"} onChange={(e) => set("specs", e.target.value)} />
