@@ -166,6 +166,8 @@ const formSchema = z.object({
   sku: z.string().trim().max(120).optional(),
   category: z.string().min(1),
   price: money.refine((v) => v > 0, "Informe o preço"),
+  rating: z.coerce.number().min(0).max(5),
+  rating_count: z.coerce.number().int().min(0).max(1_000_000_000),
   old_price: z.union([z.literal(""), money]).optional(),
   stock: z.coerce.number().int().min(0).max(100000),
   min_stock: z.coerce.number().int().min(0).max(100000),
@@ -180,7 +182,7 @@ const formSchema = z.object({
 type FormState = {
   name: string; slug: string; brand: string; sku: string; category: string; price: string; old_price: string;
   stock: string; min_stock: string; badge: string; short_description: string; description: string; image_url: string; gallery_urls: string[];
-  sort_order: string; specs: string; tags: ProductTag[]; active: boolean;
+  sort_order: string; specs: string; tags: ProductTag[]; active: boolean; rating: string; rating_count: string;
 };
 
 function normalizeImageReference(value: string): string {
@@ -203,6 +205,7 @@ function toForm(p: ProductRow | null): FormState {
     stock: p ? String(p.stock) : "0", min_stock: p ? String(p.min_stock) : "3", badge: p?.badge ?? "",
     short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: images[0] ?? "", gallery_urls: images,
     sort_order: p ? String(p.sort_order) : "100", specs, tags: (p?.tags ?? []) as ProductTag[], active: p?.active ?? true,
+    rating: String(p?.rating ?? 0), rating_count: String(p?.rating_count ?? p?.reviews ?? 0),
   };
 }
 
@@ -296,6 +299,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
       const payload = {
         name: v.name, slug: v.slug, brand: v.brand, sku: v.sku || `GT-${v.slug.toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`, category: v.category,
         price: v.price, old_price: oldPrice && oldPrice > v.price ? oldPrice : null,
+        rating: v.rating, rating_count: v.rating_count, reviews: v.rating_count,
         min_stock: v.min_stock, badge: v.badge || null, short_description: v.short_description,
         description: v.description, image_url: v.image_url, gallery_urls: [v.image_url, ...form.gallery_urls.filter((image) => image !== v.image_url)], sort_order: v.sort_order ?? 100,
         specs: parseSpecs(form.specs), tags: form.tags, active: form.active,
@@ -368,6 +372,12 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
           </Field>
           <Field label="Preço antigo (opcional, mostra desconto)">
             <Input type="number" min={0} step="0.01" inputMode="decimal" value={form.old_price} onChange={(e) => set("old_price", e.target.value)} />
+          </Field>
+          <Field label="Nota de Avaliação (0 a 5)">
+            <Input type="number" min={0} max={5} step="0.1" inputMode="decimal" value={form.rating} onChange={(e) => set("rating", e.target.value)} />
+          </Field>
+          <Field label="Quantidade de Avaliações">
+            <Input type="number" min={0} step="1" inputMode="numeric" value={form.rating_count} onChange={(e) => set("rating_count", e.target.value)} />
           </Field>
           {isNew ? (
             <Field label="Estoque inicial">
