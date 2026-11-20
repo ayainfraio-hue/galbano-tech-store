@@ -132,6 +132,7 @@ export type Database = {
           old_price: number | null
           price: number
           rating: number
+          rating_count: number
           reviews: number
           short_description: string
           sku: string
@@ -157,6 +158,7 @@ export type Database = {
           old_price?: number | null
           price: number
           rating?: number
+          rating_count?: number
           reviews?: number
           short_description?: string
           sku: string
@@ -182,6 +184,7 @@ export type Database = {
           old_price?: number | null
           price?: number
           rating?: number
+          rating_count?: number
           reviews?: number
           short_description?: string
           sku?: string
