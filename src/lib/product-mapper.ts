@@ -22,7 +22,7 @@ export function mapProductRow(row: ProductRow): Product {
     price: Number(row.price),
     oldPrice: row.old_price != null && Number(row.old_price) > Number(row.price) ? Number(row.old_price) : undefined,
     rating: Number(row.rating),
-    reviews: row.reviews,
+    reviews: row.rating_count,
     badge: row.badge ?? undefined,
     tags: (row.tags ?? []) as ProductTag[],
     short: row.short_description,
