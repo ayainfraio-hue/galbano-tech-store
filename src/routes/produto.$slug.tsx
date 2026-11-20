@@ -231,18 +231,64 @@ function ProductPage() {
 
 
 function renderDescription(source: string): ReactNode {
-  const normalized = source.replace(/\\([*_])/g, "$1").replace(/\r\n?/g, "\n");
+  const normalized = source.replace(/\\([*_])/g, "$1").replace(/\r\n?/g, "\n").trim();
   const lines = normalized.split("\n");
-  return lines.map((line, index) => (
-    <Fragment key={index}>
-      {renderInlineMarkdown(line)}
-      {index < lines.length - 1 ? "\n" : null}
-    </Fragment>
-  ));
+  const blocks: ReactNode[] = [];
+  let index = 0;
+
+  const isListItem = (line: string) => /^\s*(?:[-+*]|\d+[.)])\s+/.test(line);
+
+  while (index < lines.length) {
+    if (!lines[index].trim()) {
+      index += 1;
+      continue;
+    }
+
+    const heading = lines[index].match(/^\s*(#{1,3})\s+(.+)$/);
+    if (heading) {
+      blocks.push(
+        <h3 key={`heading-${index}`} className="mb-2 mt-4 font-semibold text-foreground">
+          {renderInlineMarkdown(heading[2])}
+        </h3>,
+      );
+      index += 1;
+      continue;
+    }
+
+    if (isListItem(lines[index])) {
+      const ordered = /^\s*\d+[.)]\s+/.test(lines[index]);
+      const items: ReactNode[] = [];
+      while (index < lines.length && isListItem(lines[index]) && /^\s*\d+[.)]\s+/.test(lines[index]) === ordered) {
+        const item = lines[index].replace(/^\s*(?:[-+*]|\d+[.)])\s+/, "");
+        items.push(<li key={index}>{renderInlineMarkdown(item)}</li>);
+        index += 1;
+      }
+      const ListTag = ordered ? "ol" : "ul";
+      blocks.push(
+        <ListTag key={`list-${index}`} className={ordered ? "mb-3 list-decimal space-y-1 pl-6" : "mb-3 list-disc space-y-1 pl-6"}>
+          {items}
+        </ListTag>,
+      );
+      continue;
+    }
+
+    const paragraph: string[] = [];
+    while (index < lines.length && lines[index].trim() && !isListItem(lines[index]) && !/^\s*#{1,3}\s+/.test(lines[index])) {
+      paragraph.push(lines[index]);
+      index += 1;
+    }
+    blocks.push(
+      <p key={`paragraph-${index}`} className="mb-3 last:mb-0">
+        {renderInlineMarkdown(paragraph.join("\n"))}
+      </p>,
+    );
+  }
+
+  return <>{blocks}</>;
 }
 
 function renderInlineMarkdown(source: string): ReactNode[] {
-  const pattern = /(\*\*([^*]+)\*\*|(?<!\*)\*([^*]+)\*(?!\*)|__([^_]+)__|_([^_]+)_)/g;
+  const pattern = /(\*\*([\s\S]+?)\*\*|(?<!\*)\*([\s\S]+?)\*(?!\*)|__([\s\S]+?)__|_([\s\S]+?)_)/g;
   const result: ReactNode[] = [];
   let lastIndex = 0;
   for (const match of source.matchAll(pattern)) {
