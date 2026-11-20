@@ -45,7 +45,11 @@ function ProductsPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("products").select("*").order("sort_order").order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return Promise.all((data ?? []).map(async (product) => {
+        if (/^https?:\/\//i.test(product.image_url)) return { ...product, displayImage: product.image_url };
+        const { data: signed } = await supabase.storage.from("product-images").createSignedUrl(product.image_url, 60 * 60);
+        return { ...product, displayImage: signed?.signedUrl ?? "" };
+      }));
     },
   });
 
@@ -105,7 +109,7 @@ function ProductsPage() {
           <ul className="divide-y divide-border">
             {list.map((p) => (
               <li key={p.id} className={cn("flex flex-wrap items-center gap-3 px-4 py-3 text-sm", !p.active && "opacity-60")}>
-                <img src={p.image_url} alt="" className="h-12 w-12 shrink-0 rounded-lg bg-surface object-contain p-1" />
+                <img src={p.displayImage} alt="" className="h-12 w-12 shrink-0 rounded-lg bg-surface object-contain p-1" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{p.name}</p>
                   <p className="text-xs text-muted-foreground">
@@ -169,22 +173,35 @@ const formSchema = z.object({
   short_description: z.string().trim().max(200),
   description: z.string().trim().max(4000),
   image_url: z.string().trim().min(1, "Envie uma foto do produto"),
+  gallery_urls: z.array(z.string()).min(1).max(12),
   sort_order: z.coerce.number().int().min(0).max(10000).optional(),
 });
 
 type FormState = {
   name: string; slug: string; brand: string; sku: string; category: string; price: string; old_price: string;
-  stock: string; min_stock: string; badge: string; short_description: string; description: string; image_url: string;
+  stock: string; min_stock: string; badge: string; short_description: string; description: string; image_url: string; gallery_urls: string[];
   sort_order: string; specs: string; tags: ProductTag[]; active: boolean;
 };
 
+function normalizeImageReference(value: string): string {
+  const marker = "/storage/v1/object/sign/product-images/";
+  const publicMarker = "/storage/v1/object/public/product-images/";
+  try {
+    const url = new URL(value);
+    const path = url.pathname.includes(marker) ? url.pathname.split(marker)[1] : url.pathname.includes(publicMarker) ? url.pathname.split(publicMarker)[1] : null;
+    return path ? decodeURIComponent(path) : value;
+  } catch { return value; }
+}
+
 function toForm(p: ProductRow | null): FormState {
   const specs = Array.isArray(p?.specs) ? (p!.specs as [string, string][]).map(([k, v]) => `${k}: ${v}`).join("\n") : "";
+  const galleryUrls = Array.isArray(p?.gallery_urls) ? p.gallery_urls.filter((value): value is string => typeof value === "string") : [];
+  const images = [...new Set([p?.image_url ?? "", ...galleryUrls].filter(Boolean).map(normalizeImageReference))];
   return {
     name: p?.name ?? "", slug: p?.slug ?? "", brand: p?.brand ?? "", sku: p?.sku ?? "",
     category: p?.category ?? categories[0]?.slug ?? "smartphones", price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "",
     stock: p ? String(p.stock) : "0", min_stock: p ? String(p.min_stock) : "3", badge: p?.badge ?? "",
-    short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: p?.image_url ?? "",
+    short_description: p?.short_description ?? "", description: p?.description ?? "", image_url: images[0] ?? "", gallery_urls: images,
     sort_order: p ? String(p.sort_order) : "100", specs, tags: (p?.tags ?? []) as ProductTag[], active: p?.active ?? true,
   };
 }
@@ -208,6 +225,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
   const [form, setForm] = useState<FormState>(toForm(null));
   const [slugTouched, setSlugTouched] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const categoryOptions = useQuery({
     queryKey: ["store-categories"],
     queryFn: async () => {
@@ -226,22 +244,47 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }));
 
-  async function upload(file: File): Promise<void> {
-    if (!file.type.startsWith("image/")) return void toast.error("Escolha um arquivo de imagem");
-    if (file.size > 5 * 1024 * 1024) return void toast.error("A imagem deve ter até 5 MB");
-    setUploading(true);
-    const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `products/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
-    if (error) {
-      setUploading(false);
-      return void toast.error("Falha ao enviar a imagem");
+  useEffect(() => {
+    let cancelled = false;
+    async function loadPreviews() {
+      const entries = await Promise.all(form.gallery_urls.map(async (path) => {
+        if (/^https?:\/\//i.test(path)) return [path, path] as const;
+        const { data } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60);
+        return [path, data?.signedUrl ?? ""] as const;
+      }));
+      if (!cancelled) setImagePreviews(Object.fromEntries(entries));
     }
-    // Pasta privada: geramos um link assinado de longa duração para exibir na loja.
-    const { data, error: signError } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-    setUploading(false);
-    if (signError || !data) return void toast.error("Falha ao gerar o link da imagem");
-    set("image_url", data.signedUrl);
+    void loadPreviews();
+    return () => { cancelled = true; };
+  }, [form.gallery_urls]);
+
+  async function uploadFiles(files: FileList | null): Promise<void> {
+    const selected = Array.from(files ?? []);
+    if (!selected.length) return;
+    if (selected.some((file) => !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024)) return void toast.error("Escolha imagens de até 5 MB cada");
+    if (form.gallery_urls.length + selected.length > 12) return void toast.error("Cada produto pode ter até 12 fotos");
+    setUploading(true);
+    const uploaded: string[] = [];
+    try {
+      for (const file of selected) {
+        const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const path = `products/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+        if (error) throw error;
+        uploaded.push(path);
+      }
+      setForm((current) => ({ ...current, gallery_urls: [...current.gallery_urls, ...uploaded], image_url: current.image_url || uploaded[0] || "" }));
+      toast.success(`${uploaded.length} foto(s) enviada(s)`);
+    } catch {
+      toast.error("Falha ao enviar uma ou mais imagens");
+    } finally { setUploading(false); }
+  }
+
+  function removeImage(path: string) {
+    setForm((current) => {
+      const gallery_urls = current.gallery_urls.filter((image) => image !== path);
+      return { ...current, gallery_urls, image_url: current.image_url === path ? gallery_urls[0] ?? "" : current.image_url };
+    });
   }
 
   const save = useMutation({
@@ -254,7 +297,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
         name: v.name, slug: v.slug, brand: v.brand, sku: v.sku || `GT-${v.slug.toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`, category: v.category,
         price: v.price, old_price: oldPrice && oldPrice > v.price ? oldPrice : null,
         min_stock: v.min_stock, badge: v.badge || null, short_description: v.short_description,
-        description: v.description, image_url: v.image_url, sort_order: v.sort_order ?? 100,
+        description: v.description, image_url: v.image_url, gallery_urls: [v.image_url, ...form.gallery_urls.filter((image) => image !== v.image_url)], sort_order: v.sort_order ?? 100,
         specs: parseSpecs(form.specs), tags: form.tags, active: form.active,
       };
       if (isNew) {
@@ -342,18 +385,26 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
             <Input value={form.badge} maxLength={30} placeholder="Ex.: Novo, Exclusivo" onChange={(e) => set("badge", e.target.value)} />
           </Field>
 
-          <Field label="Foto do produto" className="sm:col-span-2">
-            <div className="flex items-center gap-3">
-              <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface">
-                {form.image_url ? <img src={form.image_url} alt="" className="h-full w-full object-contain p-1" /> : <ImagePlus className="h-6 w-6 text-surface-muted-foreground" />}
-              </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <label className={cn("inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold/60 px-4 py-2 text-sm text-gold hover:bg-gold hover:text-primary-foreground", uploading && "pointer-events-none opacity-60")}>
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                  {uploading ? "Enviando…" : "Enviar foto"}
-                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
-                </label>
-              </div>
+          <Field label="Fotos do produto (até 12)" className="sm:col-span-2">
+            <div className="space-y-3">
+              <label className={cn("inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold/60 px-4 py-2 text-sm text-gold hover:bg-gold hover:text-primary-foreground", uploading && "pointer-events-none opacity-60")}>
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                {uploading ? "Enviando fotos…" : "Adicionar fotos"}
+                <input type="file" accept="image/*" multiple className="sr-only" disabled={uploading} onChange={(e) => { void uploadFiles(e.target.files); e.target.value = ""; }} />
+              </label>
+              {form.gallery_urls.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {form.gallery_urls.map((path) => (
+                    <div key={path} className={cn("relative overflow-hidden rounded-xl border bg-surface p-2", form.image_url === path ? "border-gold ring-2 ring-gold/30" : "border-border")}>
+                      <img src={imagePreviews[path] || ""} alt="Foto do produto" className="aspect-square w-full object-contain" />
+                      <Button type="button" size="sm" variant={form.image_url === path ? "gold" : "outline"} className="mt-2 w-full text-xs" onClick={() => set("image_url", path)}>
+                        {form.image_url === path ? "Capa selecionada" : "Definir como capa"}
+                      </Button>
+                      <button type="button" onClick={() => removeImage(path)} aria-label="Remover foto" className="absolute right-2 top-2 rounded-full bg-background/90 p-1 text-destructive shadow"><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-sm text-muted-foreground">Nenhuma foto adicionada.</p>}
             </div>
           </Field>
 

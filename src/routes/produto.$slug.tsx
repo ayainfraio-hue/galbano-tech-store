@@ -1,6 +1,6 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { BadgeCheck, ChevronRight, ShieldCheck, ShoppingCart, Star, Truck } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 
 import { useAddToCart } from "@/components/store/ProductCard";
 import { ProductCarousel } from "@/components/store/ProductCarousel";
@@ -53,6 +53,8 @@ function ProductPage() {
   const products = useProducts();
   const product = getProduct(products, loaded.slug) ?? loaded;
   const [qty, setQty] = useState(1);
+  const [activeImage, setActiveImage] = useState(product.image);
+  useEffect(() => setActiveImage(product.image), [product.image]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const addToCart = useAddToCart();
   const navigate = useNavigate();
@@ -84,12 +86,21 @@ function ProductPage() {
             <span className="absolute left-5 top-5 rounded-md bg-ink px-2.5 py-1 text-xs font-bold text-gold">-{off}% OFF</span>
           )}
           <img
-            src={product.image}
+            src={activeImage}
             alt={product.name}
             width={816}
             height={816}
             className="mx-auto aspect-square w-full max-w-lg object-contain mix-blend-multiply"
           />
+          {product.images.length > 1 && (
+            <div className="mx-auto mt-4 flex max-w-lg flex-wrap justify-center gap-3">
+              {product.images.map((image, index) => (
+                <button key={image} type="button" onClick={() => setActiveImage(image)} aria-label={`Ver foto ${index + 1}`} aria-pressed={activeImage === image} className={`h-16 w-16 overflow-hidden rounded-lg border bg-white p-1 transition ${activeImage === image ? "border-gold ring-2 ring-gold/30" : "border-border"}`}>
+                  <img src={image} alt={`${product.name} — foto ${index + 1}`} className="h-full w-full object-contain" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col">
@@ -186,7 +197,9 @@ function ProductPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="descricao" className="mt-6 max-w-3xl leading-relaxed text-muted-foreground">
-          {product.description}
+          <div className="whitespace-pre-wrap">
+            {renderDescription(product.description)}
+          </div>
         </TabsContent>
         <TabsContent value="especificacoes" className="mt-6">
           <dl className="max-w-3xl overflow-hidden rounded-2xl border border-border">
@@ -214,4 +227,33 @@ function ProductPage() {
       )}
     </div>
   );
+}
+
+
+function renderDescription(source: string): ReactNode {
+  const normalized = source.replace(/\\([*_])/g, "$1").replace(/\r\n?/g, "\n");
+  const lines = normalized.split("\n");
+  return lines.map((line, index) => (
+    <Fragment key={index}>
+      {renderInlineMarkdown(line)}
+      {index < lines.length - 1 ? "\n" : null}
+    </Fragment>
+  ));
+}
+
+function renderInlineMarkdown(source: string): ReactNode[] {
+  const pattern = /(\*\*([^*]+)\*\*|(?<!\*)\*([^*]+)\*(?!\*)|__([^_]+)__|_([^_]+)_)/g;
+  const result: ReactNode[] = [];
+  let lastIndex = 0;
+  for (const match of source.matchAll(pattern)) {
+    const index = match.index ?? 0;
+    if (index > lastIndex) result.push(source.slice(lastIndex, index));
+    const content = match[2] ?? match[3] ?? match[4] ?? match[5] ?? "";
+    result.push(match[2] || match[4]
+      ? <strong key={index} className="font-semibold text-foreground">{content}</strong>
+      : <em key={index}>{content}</em>);
+    lastIndex = index + match[0].length;
+  }
+  if (lastIndex < source.length) result.push(source.slice(lastIndex));
+  return result;
 }
