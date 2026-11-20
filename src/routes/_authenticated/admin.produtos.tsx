@@ -160,10 +160,10 @@ function ProductsPage() {
 const money = z.coerce.number().min(0, "Valor inválido").max(1_000_000, "Valor muito alto");
 
 const formSchema = z.object({
-  name: z.string().trim().min(2, "Informe o nome").max(160),
+  name: z.string().trim().min(2, "Informe o nome").max(200),
   slug: z.string().trim().min(2, "Informe o endereço").max(80).regex(/^[a-z0-9-]+$/, "Use só letras minúsculas, números e hífen"),
   brand: z.string().trim().min(1, "Informe a marca").max(60),
-  sku: z.string().trim().max(40).optional(),
+  sku: z.string().trim().max(120).optional(),
   category: z.string().min(1),
   price: money.refine((v) => v > 0, "Informe o preço"),
   old_price: z.union([z.literal(""), money]).optional(),
@@ -342,7 +342,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
           <Field label="Nome" className="sm:col-span-2">
             <Input
               value={form.name}
-              maxLength={160}
+              maxLength={200}
               onChange={(e) => {
                 set("name", e.target.value);
                 if (!slugTouched) set("slug", slugify(e.target.value));
