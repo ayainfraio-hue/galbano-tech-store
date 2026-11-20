@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { GripVertical, ImagePlus, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -229,6 +229,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
   const [slugTouched, setSlugTouched] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
+  const [draggedImage, setDraggedImage] = useState<string | null>(null);
   const categoryOptions = useQuery({
     queryKey: ["store-categories"],
     queryFn: async () => {
@@ -283,10 +284,23 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
     } finally { setUploading(false); }
   }
 
+  function reorderImages(source: string, target: string) {
+    if (source === target) return;
+    setForm((current) => {
+      const gallery_urls = [...current.gallery_urls];
+      const from = gallery_urls.indexOf(source);
+      const to = gallery_urls.indexOf(target);
+      if (from < 0 || to < 0) return current;
+      gallery_urls.splice(from, 1);
+      gallery_urls.splice(to, 0, source);
+      return { ...current, gallery_urls, image_url: gallery_urls[0] ?? "" };
+    });
+  }
+
   function removeImage(path: string) {
     setForm((current) => {
       const gallery_urls = current.gallery_urls.filter((image) => image !== path);
-      return { ...current, gallery_urls, image_url: current.image_url === path ? gallery_urls[0] ?? "" : current.image_url };
+      return { ...current, gallery_urls, image_url: gallery_urls[0] ?? "" };
     });
   }
 
@@ -301,7 +315,7 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
         price: v.price, old_price: oldPrice && oldPrice > v.price ? oldPrice : null,
         rating: v.rating, rating_count: v.rating_count, reviews: v.rating_count,
         min_stock: v.min_stock, badge: v.badge || null, short_description: v.short_description,
-        description: v.description, image_url: v.image_url, gallery_urls: [v.image_url, ...form.gallery_urls.filter((image) => image !== v.image_url)], sort_order: v.sort_order ?? 100,
+        description: v.description, image_url: form.gallery_urls[0] ?? v.image_url, gallery_urls: form.gallery_urls, sort_order: v.sort_order ?? 100,
         specs: parseSpecs(form.specs), tags: form.tags, active: form.active,
       };
       if (isNew) {
@@ -403,17 +417,29 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
                 <input type="file" accept="image/*" multiple className="sr-only" disabled={uploading} onChange={(e) => { void uploadFiles(e.target.files); e.target.value = ""; }} />
               </label>
               {form.gallery_urls.length > 0 ? (
+                <>
+                <p className="text-xs text-muted-foreground">Arraste as fotos para organizar. A primeira será usada automaticamente como capa.</p>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {form.gallery_urls.map((path) => (
-                    <div key={path} className={cn("relative overflow-hidden rounded-xl border bg-surface p-2", form.image_url === path ? "border-gold ring-2 ring-gold/30" : "border-border")}>
-                      <img src={imagePreviews[path] || ""} alt="Foto do produto" className="aspect-square w-full object-contain" />
-                      <Button type="button" size="sm" variant={form.image_url === path ? "gold" : "outline"} className="mt-2 w-full text-xs" onClick={() => set("image_url", path)}>
-                        {form.image_url === path ? "Capa selecionada" : "Definir como capa"}
-                      </Button>
-                      <button type="button" onClick={() => removeImage(path)} aria-label="Remover foto" className="absolute right-2 top-2 rounded-full bg-background/90 p-1 text-destructive shadow"><Trash2 className="h-4 w-4" /></button>
+                  {form.gallery_urls.map((path, index) => (
+                    <div
+                      key={path}
+                      draggable
+                      onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", path); setDraggedImage(path); }}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => { event.preventDefault(); const source = event.dataTransfer.getData("text/plain") || draggedImage; if (source) reorderImages(source, path); setDraggedImage(null); }}
+                      onDragEnd={() => setDraggedImage(null)}
+                      className={cn("relative overflow-hidden rounded-xl border bg-surface p-2 transition-opacity", index === 0 ? "border-gold ring-2 ring-gold/30" : "border-border", draggedImage === path && "opacity-40")}
+                    >
+                      <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{index === 0 ? "Capa" : `Foto ${index + 1}`}</span>
+                        <GripVertical className="h-4 w-4 cursor-grab" aria-label="Arrastar para reordenar" />
+                      </div>
+                      <img src={imagePreviews[path] || ""} alt={`Foto ${index + 1} do produto`} className="aspect-square w-full object-contain" />
+                      <button type="button" onClick={() => removeImage(path)} aria-label={`Remover foto ${index + 1}`} className="absolute right-2 top-9 rounded-full bg-background/90 p-1 text-destructive shadow"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   ))}
                 </div>
+              </>
               ) : <p className="text-sm text-muted-foreground">Nenhuma foto adicionada.</p>}
             </div>
           </Field>
