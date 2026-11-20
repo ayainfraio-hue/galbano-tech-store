@@ -53,7 +53,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
         <div className="flex items-center justify-between text-[11px] text-surface-muted-foreground">
           <span className="font-semibold uppercase tracking-wider">{product.brand}</span>
           <span className="flex items-center gap-0.5">
-            <Star className="h-3 w-3 fill-gold text-gold" /> {product.rating.toFixed(1)}
+            <Star className="h-3 w-3 fill-gold text-gold" /> {product.rating.toFixed(1)} <span>({product.reviews})</span>
           </span>
         </div>
         <Link to="/produto/$slug" params={{ slug: product.slug }}>
