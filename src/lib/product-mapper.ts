@@ -18,7 +18,7 @@ export function mapProductRow(row: ProductRow): Product {
     sku: row.sku,
     category: row.category as CategorySlug,
     image: row.image_url,
-    images: Array.isArray(row.gallery_urls) && row.gallery_urls.length ? row.gallery_urls.filter((value): value is string => typeof value === "string") : [row.image_url],
+    images: [...new Set([row.image_url, ...(Array.isArray(row.gallery_urls) ? row.gallery_urls.filter((value): value is string => typeof value === "string") : [])])],
     price: Number(row.price),
     oldPrice: row.old_price != null && Number(row.old_price) > Number(row.price) ? Number(row.old_price) : undefined,
     rating: Number(row.rating),

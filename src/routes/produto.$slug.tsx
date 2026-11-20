@@ -249,7 +249,7 @@ function renderInlineMarkdown(source: string): ReactNode[] {
     const index = match.index ?? 0;
     if (index > lastIndex) result.push(source.slice(lastIndex, index));
     const content = match[2] ?? match[3] ?? match[4] ?? match[5] ?? "";
-    result.push(match[2] || match[4]
+    result.push(match[2] || match[3] || match[4]
       ? <strong key={index} className="font-semibold text-foreground">{content}</strong>
       : <em key={index}>{content}</em>);
     lastIndex = index + match[0].length;
