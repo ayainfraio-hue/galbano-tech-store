@@ -39,7 +39,7 @@ export function CustomerGallery() {
               <DialogTitle>{selected.customer_name}</DialogTitle>
               <DialogDescription>Experiência de cliente Gálbano Tech</DialogDescription>
             </DialogHeader>
-            <img src={selected.image_url} alt={`Depoimento de ${selected.customer_name}`} className="max-h-[55vh] w-full rounded-xl object-contain" />
+            <img src={selected.image_url} alt={`Depoimento de ${selected.customer_name}`} loading="lazy" decoding="async" className="max-h-[55vh] w-full rounded-xl object-contain" />
             <blockquote className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">“{selected.message}”</blockquote>
           </>}
         </DialogContent>

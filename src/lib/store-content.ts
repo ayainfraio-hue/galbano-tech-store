@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { categories as fallbackCategories } from "@/data/catalog";
 
@@ -41,28 +41,32 @@ export function useStoreSettings() {
   });
 }
 
+export const storeBrandsQueryOptions = queryOptions({
+  queryKey: ["store-brands"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("store_brands").select("id,name,sort_order,active").eq("active", true).order("sort_order");
+    if (error) throw error;
+    return data;
+  },
+  staleTime: 60_000,
+});
+
 export function useStoreBrands() {
-  return useQuery({
-    queryKey: ["store-brands"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("store_brands").select("id,name,sort_order,active").eq("active", true).order("sort_order");
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 60_000,
-  });
+  return useQuery(storeBrandsQueryOptions);
 }
 
+export const customerGalleryQueryOptions = queryOptions({
+  queryKey: ["customer-gallery"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("customer_gallery").select("id,customer_name,message,image_url,sort_order").eq("active", true).order("sort_order").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+  staleTime: 60_000,
+});
+
 export function useCustomerGallery() {
-  return useQuery({
-    queryKey: ["customer-gallery"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("customer_gallery").select("id,customer_name,message,image_url,sort_order").eq("active", true).order("sort_order").order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 60_000,
-  });
+  return useQuery(customerGalleryQueryOptions);
 }
 
 

@@ -21,6 +21,7 @@ import { CartDrawer } from "@/components/store/CartDrawer";
 import { supabase } from "@/integrations/supabase/client";
 import { CartProvider } from "@/lib/cart";
 import { productsQueryOptions } from "@/lib/products";
+import { customerGalleryQueryOptions, storeBrandsQueryOptions } from "@/lib/store-content";
 import { refreshBrandFavicon } from "@/lib/brand-logo";
 
 function NotFoundComponent() {
@@ -83,9 +84,13 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: ({ context }) => {
-    // Preload products without blocking the root route or delaying the storefront shell.
-    void context.queryClient.prefetchQuery(productsQueryOptions).catch((error) => {
-      console.error("Failed to preload store products:", error);
+    // Start all homepage Supabase reads together without blocking the storefront shell.
+    void Promise.all([
+      context.queryClient.prefetchQuery(productsQueryOptions),
+      context.queryClient.prefetchQuery(storeBrandsQueryOptions),
+      context.queryClient.prefetchQuery(customerGalleryQueryOptions),
+    ]).catch((error) => {
+      console.error("Failed to preload homepage data:", error);
     });
   },
   head: () => ({
