@@ -41,12 +41,52 @@ export function useStoreSettings() {
   });
 }
 
+export type StoreBrand = {
+  id: string;
+  name: string;
+  sort_order: number;
+  active: boolean;
+};
+
+export type CustomerGalleryItem = {
+  id: string;
+  customer_name: string;
+  message: string;
+  image_url: string;
+  sort_order: number;
+};
+
+/**
+ * These two content tables are provisioned in Supabase but are absent from the
+ * checked-in generated Database type. Keep the escape hatch local to the query
+ * boundary and expose strongly typed rows to the UI instead of leaking
+ * PostgREST SelectQueryError into component props.
+ */
+const contentTableClient = supabase as unknown as {
+  from: (table: "store_brands" | "customer_gallery") => {
+    select: (columns: string) => {
+      eq: (column: string, value: boolean) => {
+        order: (column: string, options?: { ascending?: boolean }) => {
+          order: (column: string, options?: { ascending?: boolean }) => Promise<{
+            data: unknown;
+            error: { message: string } | null;
+          }>;
+        };
+      };
+    };
+  };
+};
+
 export const storeBrandsQueryOptions = queryOptions({
   queryKey: ["store-brands"],
-  queryFn: async () => {
-    const { data, error } = await supabase.from("store_brands").select("id,name,sort_order,active").eq("active", true).order("sort_order");
+  queryFn: async (): Promise<StoreBrand[]> => {
+    const { data, error } = await contentTableClient
+      .from("store_brands")
+      .select("id,name,sort_order,active")
+      .eq("active", true)
+      .order("sort_order");
     if (error) throw error;
-    return data;
+    return (data ?? []) as StoreBrand[];
   },
   staleTime: 60_000,
 });
@@ -57,10 +97,15 @@ export function useStoreBrands() {
 
 export const customerGalleryQueryOptions = queryOptions({
   queryKey: ["customer-gallery"],
-  queryFn: async () => {
-    const { data, error } = await supabase.from("customer_gallery").select("id,customer_name,message,image_url,sort_order").eq("active", true).order("sort_order").order("created_at", { ascending: false });
+  queryFn: async (): Promise<CustomerGalleryItem[]> => {
+    const { data, error } = await contentTableClient
+      .from("customer_gallery")
+      .select("id,customer_name,message,image_url,sort_order")
+      .eq("active", true)
+      .order("sort_order")
+      .order("created_at", { ascending: false });
     if (error) throw error;
-    return data;
+    return (data ?? []) as CustomerGalleryItem[];
   },
   staleTime: 60_000,
 });
@@ -68,7 +113,6 @@ export const customerGalleryQueryOptions = queryOptions({
 export function useCustomerGallery() {
   return useQuery(customerGalleryQueryOptions);
 }
-
 
 export type StoreCategory = {
   id?: string;
