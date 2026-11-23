@@ -120,14 +120,13 @@ export function useStoreCategories() {
   return useQuery({
     queryKey: ["store-categories"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_categories")
+      const { data, error } = await (supabase.from as any)("store_categories")
         .select("id,name,slug,image_url,active,sort_order")
         .eq("active", true)
         .order("sort_order")
         .order("name");
       if (error) throw error;
-      return data as StoreCategory[];
+      return data as any as StoreCategory[];
     },
     staleTime: 30_000,
     placeholderData: fallbackCategories.map((category, index) => ({
