@@ -62,6 +62,13 @@ export function ProductCarousel({
     };
   }, [api, update]);
 
+  // Recalculate Embla after async products arrive or the list changes.
+  useEffect(() => {
+    if (!api) return;
+    api.reInit();
+    update();
+  }, [api, products.length, update]);
+
   return (
     <div className={cn("relative", className)}>
       <div ref={ref} className="overflow-hidden px-1 py-2">
