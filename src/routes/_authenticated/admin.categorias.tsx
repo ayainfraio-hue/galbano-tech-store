@@ -25,7 +25,7 @@ function CategoriesPage() {
   const categories = useQuery({
     queryKey: ["admin", "store-categories"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("store_categories").select("*").order("sort_order").order("name");
+      const { data, error } = await (supabase.from as any)("store_categories").select("*").order("sort_order").order("name");
       if (error) throw error;
       return data as Category[];
     },
@@ -52,7 +52,7 @@ function CategoriesPage() {
       });
       if (uploadError) throw new Error(`Não foi possível enviar a imagem: ${uploadError.message}`);
       const imageUrl = supabase.storage.from("customer-gallery").getPublicUrl(path).data.publicUrl;
-      const { error: updateError } = await supabase.from("store_categories").update({ image_url: imageUrl }).eq("id", category.id);
+      const { error: updateError } = await (supabase.from as any)("store_categories").update({ image_url: imageUrl }).eq("id", category.id);
       if (updateError) throw updateError;
       toast.success(`Foto de ${category.name} atualizada.`);
       await qc.invalidateQueries({ queryKey: ["admin", "store-categories"] });
@@ -68,7 +68,7 @@ function CategoriesPage() {
     mutationFn: async (orderedIds: string[]) => {
       const updates = await Promise.all(
         orderedIds.map((id, index) =>
-          supabase.from("store_categories").update({ sort_order: (index + 1) * 10 }).eq("id", id),
+          (supabase.from as any)("store_categories").update({ sort_order: (index + 1) * 10 }).eq("id", id),
         ),
       );
       const failed = updates.find((result) => result.error);
@@ -111,7 +111,7 @@ function CategoriesPage() {
         const { count, error: countError } = await supabase.from("products").select("id", { count: "exact", head: true }).eq("category", category?.slug ?? "");
         if (countError) throw countError;
         if ((count ?? 0) > 0) throw new Error("Esta categoria possui produtos vinculados. Reatribua os produtos antes de excluí-la.");
-        const { error } = await supabase.from("store_categories").delete().eq("id", value.id);
+        const { error } = await (supabase.from as any)("store_categories").delete().eq("id", value.id);
         if (error) throw error;
         return;
       }
@@ -123,8 +123,8 @@ function CategoriesPage() {
         sort_order: current?.sort_order ?? ((categories.data?.length ?? 0) + 1) * 10,
       };
       const { error } = value.id
-        ? await supabase.from("store_categories").update(payload).eq("id", value.id)
-        : await supabase.from("store_categories").insert(payload);
+        ? await (supabase.from as any)("store_categories").update(payload).eq("id", value.id)
+        : await (supabase.from as any)("store_categories").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
