@@ -9,8 +9,7 @@ export const listStoreProducts = createServerFn({ method: "GET" }).handler(async
   const url = process.env["SUPABASE_URL"];
   const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
   if (!url || !key) {
-    console.error("listStoreProducts: missing backend env");
-    return [];
+    throw new Error("listStoreProducts: missing Supabase backend environment variables");
   }
   const client = createClient<Database>(url, key, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
@@ -30,8 +29,7 @@ export const listStoreProducts = createServerFn({ method: "GET" }).handler(async
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
   if (error) {
-    console.error("listStoreProducts:", error.message);
-    return [];
+    throw error;
   }
   const resolved = await Promise.all((data ?? []).map(async (row) => {
     const references = [...new Set([row.image_url, ...(Array.isArray(row.gallery_urls) ? row.gallery_urls.filter((value): value is string => typeof value === "string") : [])])];

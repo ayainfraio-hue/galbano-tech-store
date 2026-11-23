@@ -11,7 +11,7 @@ type BrandLogoProps = {
 /** Loads the one centrally managed logo and falls back to the existing artwork. */
 export function BrandLogo({ alt, className, fallback }: BrandLogoProps) {
   const [failed, setFailed] = useState(false);
-  const [version, setVersion] = useState(0);
+  const [version, setVersion] = useState(() => Date.now());
 
   useEffect(() => {
     const refresh = () => {

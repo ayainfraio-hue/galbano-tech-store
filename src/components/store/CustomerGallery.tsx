@@ -7,11 +7,18 @@ export function CustomerGallery() {
   const gallery = useCustomerGallery();
   const [selected, setSelected] = useState<(NonNullable<typeof gallery.data>[number]) | null>(null);
   const items = gallery.data ?? [];
-  if (items.length === 0) return null;
+
 
   return (
     <section className="container-store">
       <SectionTitle eyebrow="Experiências reais" title="Quem compra, recomenda" />
+      {gallery.isLoading ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">Carregando experiências de clientes...</p>
+      ) : gallery.isError ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">Não foi possível carregar os depoimentos agora.</p>
+      ) : items.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">Novos depoimentos de clientes em breve.</p>
+      ) : (
       <div className="scrollbar-none -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 py-3 sm:mx-0 sm:px-0">
         {items.map((item) => (
           <button key={item.id} type="button" onClick={() => setSelected(item)} className="group w-64 shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-panel text-left transition hover:-translate-y-1 hover:border-gold sm:w-72">
@@ -24,6 +31,7 @@ export function CustomerGallery() {
           </button>
         ))}
       </div>
+      )}
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto border-gold/30 bg-panel sm:max-w-2xl">
           {selected && <>

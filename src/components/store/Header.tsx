@@ -1,22 +1,21 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, LayoutGrid, Menu, Search, ShoppingCart, Sparkles, Tag } from "lucide-react";
+import { Menu, Search, ShoppingCart, Sparkles, Tag } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useStoreCategories } from "@/lib/store-content";
-import { getCategory } from "@/data/catalog";
 import { useCart } from "@/lib/cart";
 import { WHATSAPP_DISPLAY, formatWhatsAppDisplay, whatsappUrl } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
 import { useStoreSettings } from "@/lib/store-content";
 import { WhatsAppIcon } from "./WhatsAppIcon";
+
+const primaryNavItems = [
+  { label: "Smartphones", slug: "smartphones" },
+  { label: "Notebooks", slug: "notebooks" },
+  { label: "Áudio", slug: "audio" },
+  { label: "Smartwatches", slug: "smartwatches" },
+  { label: "Tablets", slug: "tablets" },
+] as const;
 
 function SearchForm({ className }: { className?: string }) {
   const navigate = useNavigate();
@@ -152,71 +151,19 @@ export function Header() {
         <SearchForm />
       </div>
 
-      <nav aria-label="Categorias" className="hidden border-t border-border lg:block">
-        <div className="container-store flex h-12 items-center gap-1 text-sm">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 font-semibold">
-                <LayoutGrid className="h-4 w-4 text-gold" /> Todas as categorias <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64 border-border bg-popover">
-              {categories.map((c) => (
-                <DropdownMenuItem key={c.slug} asChild>
-                  <Link to="/categoria/$slug" params={{ slug: c.slug }} className="flex items-center gap-3">
-                    <img src={c.image_url || getCategory(c.slug)?.image || ""} alt="" className="h-8 w-8 rounded bg-surface object-contain p-0.5" loading="lazy" />
-                    {c.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <span className="mx-2 h-5 w-px bg-border" />
-          <div className="flex min-w-0 flex-1 items-center justify-between">
-            {categories.slice(0, 8).map((c) => (
-              <Link
-                key={c.slug}
-                to="/categoria/$slug"
-                params={{ slug: c.slug }}
-                className="rounded-md px-2.5 py-1.5 font-medium text-muted-foreground transition hover:text-gold"
-                activeProps={{ className: "text-gold" }}
-              >
-                {c.name}
-              </Link>
-            ))}
-            <Link
-              to="/categoria/$slug"
-              params={{ slug: "ofertas" }}
-              className="flex items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1.5 font-semibold text-gold ring-1 ring-gold/40 transition hover:bg-gold hover:text-primary-foreground"
-            >
-              <Tag className="h-3.5 w-3.5" /> Ofertas
+      <nav aria-label="Categorias" className="border-t border-border">
+        <div className="container-store flex h-12 items-center justify-between gap-2 overflow-x-auto">
+          {primaryNavItems.map((item) => (
+            <Link key={item.slug} to="/categoria/$slug" params={{ slug: item.slug }} className="shrink-0 rounded-md px-2 py-1.5 text-xs font-semibold text-muted-foreground transition hover:text-gold sm:px-3 sm:text-sm" activeProps={{ className: "text-gold" }}>
+              {item.label}
             </Link>
-          </div>
+          ))}
+          <Link to="/categoria/$slug" params={{ slug: "ofertas" }} className="flex shrink-0 items-center gap-1.5 rounded-full bg-gold/10 px-3 py-1.5 text-xs font-bold text-gold ring-1 ring-gold/40 transition hover:bg-gold hover:text-primary-foreground sm:text-sm">
+            <Tag className="h-3.5 w-3.5" /> Ofertas
+          </Link>
         </div>
       </nav>
 
-      <nav aria-label="Categorias" className="scrollbar-none overflow-x-auto border-t border-border lg:hidden">
-        <div className="flex w-max gap-2 px-4 py-2.5">
-          <Link
-            to="/categoria/$slug"
-            params={{ slug: "ofertas" }}
-            className="rounded-full bg-gold-gradient px-3.5 py-1.5 text-xs font-bold text-primary-foreground"
-          >
-            Ofertas
-          </Link>
-          {categories.map((c) => (
-            <Link
-              key={c.slug}
-              to="/categoria/$slug"
-              params={{ slug: c.slug }}
-              className="rounded-full border border-border bg-secondary px-3.5 py-1.5 text-xs font-medium text-foreground"
-              activeProps={{ className: "border-gold text-gold" }}
-            >
-              {c.name}
-            </Link>
-          ))}
-        </div>
-      </nav>
     </header>
   );
 }

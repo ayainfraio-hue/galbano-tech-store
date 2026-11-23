@@ -66,7 +66,11 @@ function Index() {
 
       <section className="container-store">
         <SectionTitle eyebrow="Novidades" title="Lançamentos" />
-        <ProductCarousel products={launches} />
+        {launches.length > 0 ? (
+          <ProductCarousel products={launches} />
+        ) : (
+          <p className="rounded-2xl border border-border bg-panel px-5 py-8 text-center text-sm text-muted-foreground">Novidades em breve. Estamos preparando os próximos lançamentos.</p>
+        )}
       </section>
 
       <BrandsRow />

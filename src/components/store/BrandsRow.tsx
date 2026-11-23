@@ -5,10 +5,17 @@ import { SectionTitle } from "./SectionTitle";
 export function BrandsRow() {
   const query = useStoreBrands();
   const brands = query.data ?? [];
-  if (!brands.length) return null;
+
   return (
     <section className="container-store">
       <SectionTitle eyebrow="Parceiros" title="As melhores marcas" />
+      {query.isLoading ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">Carregando marcas parceiras...</p>
+      ) : query.isError ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">Não foi possível carregar as marcas agora.</p>
+      ) : brands.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">Marcas parceiras em breve.</p>
+      ) : (
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
         {brands.map((b) => (
           <li key={b.id}>
@@ -18,6 +25,7 @@ export function BrandsRow() {
           </li>
         ))}
       </ul>
+      )}
     </section>
   );
 }
