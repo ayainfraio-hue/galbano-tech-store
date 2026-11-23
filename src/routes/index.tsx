@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import heroGamer from "@/assets/hero-gamer.jpg";
 import { AboutFaq } from "@/components/store/AboutFaq";
 import { BenefitsBar } from "@/components/store/BenefitsBar";
 import { BestSellers } from "@/components/store/BestSellers";
@@ -11,7 +10,6 @@ import { HeroCarousel } from "@/components/store/HeroCarousel";
 import { ProductCarousel } from "@/components/store/ProductCarousel";
 import { PromoGrid } from "@/components/store/PromoGrid";
 import { SectionTitle } from "@/components/store/SectionTitle";
-import { ShowcaseWithBanner } from "@/components/store/ShowcaseWithBanner";
 import { productsByTag } from "@/data/catalog";
 import { useProductsMaybe } from "@/lib/products";
 
@@ -43,7 +41,6 @@ function Index() {
   const offers = productsByTag(products, "oferta")
     .slice()
     .sort((a, b) => (b.oldPrice ?? b.price) - b.price - ((a.oldPrice ?? a.price) - a.price));
-  const gamer = products.filter((p) => p.category === "games" || p.category === "perifericos");
   const featured = productsByTag(products, "destaque");
   const launches = productsByTag(products, "lancamento");
 
@@ -59,16 +56,6 @@ function Index() {
 
       <PromoGrid />
       <BenefitsBar />
-
-      <ShowcaseWithBanner
-        eyebrow="Performance"
-        title="Mundo gamer"
-        image={heroGamer}
-        bannerTitle="Setup completo"
-        bannerText="Consoles, monitores, teclados e mouses."
-        slug="games"
-        products={gamer}
-      />
 
       <section className="container-store">
         <SectionTitle eyebrow="Seleção Gálbano" title="Produtos em destaque" />
