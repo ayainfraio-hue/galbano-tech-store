@@ -56,37 +56,28 @@ export type CustomerGalleryItem = {
   sort_order: number;
 };
 
-/**
- * These two content tables are provisioned in Supabase but are absent from the
- * checked-in generated Database type. Keep the escape hatch local to the query
- * boundary and expose strongly typed rows to the UI instead of leaking
- * PostgREST SelectQueryError into component props.
- */
-const contentTableClient = supabase as unknown as {
-  from: (table: "store_brands" | "customer_gallery") => {
-    select: (columns: string) => {
-      eq: (column: string, value: boolean) => {
-        order: (column: string, options?: { ascending?: boolean }) => {
-          order: (column: string, options?: { ascending?: boolean }) => Promise<{
-            data: unknown;
-            error: { message: string } | null;
-          }>;
-        };
-      };
-    };
-  };
+type ContentQueryResult<T> = {
+  data: T[] | null;
+  error: { message: string } | null;
 };
 
+/**
+ * The store_brands and customer_gallery tables are provisioned in Supabase,
+ * but are not represented in the checked-in generated Database type.
+ * Isolate that schema mismatch at the query-result boundary so the UI only
+ * receives the concrete row types below, never PostgREST SelectQueryError.
+ */
 export const storeBrandsQueryOptions = queryOptions({
   queryKey: ["store-brands"],
   queryFn: async (): Promise<StoreBrand[]> => {
-    const { data, error } = await contentTableClient
+    const result = await supabase
       .from("store_brands")
       .select("id,name,sort_order,active")
       .eq("active", true)
       .order("sort_order");
+    const { data, error } = result as unknown as ContentQueryResult<StoreBrand>;
     if (error) throw error;
-    return (data ?? []) as StoreBrand[];
+    return data ?? [];
   },
   staleTime: 60_000,
 });
@@ -98,14 +89,15 @@ export function useStoreBrands() {
 export const customerGalleryQueryOptions = queryOptions({
   queryKey: ["customer-gallery"],
   queryFn: async (): Promise<CustomerGalleryItem[]> => {
-    const { data, error } = await contentTableClient
+    const result = await supabase
       .from("customer_gallery")
       .select("id,customer_name,message,image_url,sort_order")
       .eq("active", true)
       .order("sort_order")
       .order("created_at", { ascending: false });
+    const { data, error } = result as unknown as ContentQueryResult<CustomerGalleryItem>;
     if (error) throw error;
-    return (data ?? []) as CustomerGalleryItem[];
+    return data ?? [];
   },
   staleTime: 60_000,
 });
