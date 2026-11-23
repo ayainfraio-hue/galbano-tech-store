@@ -4,7 +4,10 @@ import { useStoreCategories } from "@/lib/store-content";
 
 export function CategoryStrip() {
   const categories = useStoreCategories();
-  const items = categories.data?.map((category) => ({
+  const items = categories.data?.filter((category) => {
+    const identity = `${category.slug} ${category.name}`.toLowerCase();
+    return !/(gamer|games|drone)/.test(identity);
+  }).map((category) => ({
     ...category,
     image: category.image_url || getCategory(category.slug)?.image || "",
   })) ?? [];
