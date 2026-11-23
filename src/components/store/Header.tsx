@@ -3,10 +3,11 @@ import { Menu, Search, ShoppingCart, Sparkles, Tag } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { getCategory } from "@/data/catalog";
 import { useCart } from "@/lib/cart";
 import { WHATSAPP_DISPLAY, formatWhatsAppDisplay, whatsappUrl } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
-import { useStoreSettings } from "@/lib/store-content";
+import { useStoreCategories, useStoreSettings } from "@/lib/store-content";
 import { WhatsAppIcon } from "./WhatsAppIcon";
 
 const primaryNavItems = [
