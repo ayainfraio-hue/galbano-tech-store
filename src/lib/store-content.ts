@@ -32,7 +32,11 @@ export function useStoreSettings() {
   return useQuery({
     queryKey: ["store-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("store_settings").select("*").eq("id", "default").single();
+      // This table is not yet present in the generated Supabase Database type.
+      const { data, error } = await (supabase.from as any)("store_settings")
+        .select("*")
+        .eq("id", "default")
+        .single();
       if (error) throw error;
       return data as StoreSettings;
     },
@@ -62,20 +66,18 @@ type ContentQueryResult<T> = {
 };
 
 /**
- * The store_brands and customer_gallery tables are provisioned in Supabase,
- * but are not represented in the checked-in generated Database type.
- * Isolate that schema mismatch at the query-result boundary so the UI only
- * receives the concrete row types below, never PostgREST SelectQueryError.
+ * These tables are provisioned in Supabase but are absent from the checked-in
+ * generated Database type. Keep the any escape hatch local to each table
+ * access, then narrow the returned rows before exposing them to UI components.
  */
 export const storeBrandsQueryOptions = queryOptions({
   queryKey: ["store-brands"],
   queryFn: async (): Promise<StoreBrand[]> => {
-    const result = await supabase
-      .from("store_brands")
+    const result = await (supabase.from as any)("store_brands")
       .select("id,name,sort_order,active")
       .eq("active", true)
       .order("sort_order");
-    const { data, error } = result as unknown as ContentQueryResult<StoreBrand>;
+    const { data, error } = result as ContentQueryResult<StoreBrand>;
     if (error) throw error;
     return data ?? [];
   },
@@ -89,13 +91,12 @@ export function useStoreBrands() {
 export const customerGalleryQueryOptions = queryOptions({
   queryKey: ["customer-gallery"],
   queryFn: async (): Promise<CustomerGalleryItem[]> => {
-    const result = await supabase
-      .from("customer_gallery")
+    const result = await (supabase.from as any)("customer_gallery")
       .select("id,customer_name,message,image_url,sort_order")
       .eq("active", true)
       .order("sort_order")
       .order("created_at", { ascending: false });
-    const { data, error } = result as unknown as ContentQueryResult<CustomerGalleryItem>;
+    const { data, error } = result as ContentQueryResult<CustomerGalleryItem>;
     if (error) throw error;
     return data ?? [];
   },
