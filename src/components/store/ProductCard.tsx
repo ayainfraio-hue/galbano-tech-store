@@ -77,6 +77,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
               <ShoppingCart className="h-4 w-4" />
             </button>
           </div>
+          <p className="mt-1 text-sm text-zinc-400">ou 7x de {formatBRL(product.price / 7)} sem juros</p>
         </div>
       </div>
     </article>
