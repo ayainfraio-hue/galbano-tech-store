@@ -138,6 +138,7 @@ function ProductPage() {
               </p>
             )}
             <p className="font-display text-4xl font-extrabold text-gold-gradient sm:text-5xl">{formatBRL(product.price)}</p>
+            <p className="mt-1 text-sm text-zinc-400">ou 7x de {formatBRL(product.price / 7)} sem juros</p>
             {off > 0 && product.oldPrice && (
               <p className="mt-1 text-sm font-medium text-gold">
                 Você economiza {formatBRL(product.oldPrice - product.price)}
