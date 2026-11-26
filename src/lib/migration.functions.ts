@@ -33,8 +33,7 @@ export const migrateSupabaseDataToSheets = createServerFn({ method: "POST" })
     const email = String(context.claims.email ?? "").trim().toLowerCase();
     if (!email) throw new Error("Não foi possível validar o e-mail da sessão.");
 
-    const { data: allowed, error: allowError } = await supabaseAdmin
-      .from("admin_emails")
+    const { data: allowed, error: allowError } = await (supabaseAdmin.from as any)("admin_emails")
       .select("email")
       .eq("email", email)
       .maybeSingle();
