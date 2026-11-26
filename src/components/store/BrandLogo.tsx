@@ -8,10 +8,10 @@ type BrandLogoProps = {
   fallback: ReactNode;
 };
 
-/** Loads the one centrally managed logo and falls back to the existing artwork. */
+/** Loads the centrally managed logo and reuses the browser cache until it changes. */
 export function BrandLogo({ alt, className, fallback }: BrandLogoProps) {
   const [failed, setFailed] = useState(false);
-  const [version, setVersion] = useState(() => Date.now());
+  const [version, setVersion] = useState<number | null>(null);
 
   useEffect(() => {
     const refresh = () => {
@@ -24,9 +24,12 @@ export function BrandLogo({ alt, className, fallback }: BrandLogoProps) {
 
   if (failed) return <>{fallback}</>;
 
+  const baseUrl = getBrandLogoUrl();
+  const src = version === null ? baseUrl : `${baseUrl}?v=${version}`;
+
   return (
     <img
-      src={`${getBrandLogoUrl()}?v=${version}`}
+      src={src}
       alt={alt}
       className={className}
       onError={() => setFailed(true)}
