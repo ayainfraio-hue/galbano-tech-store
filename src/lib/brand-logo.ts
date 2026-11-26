@@ -7,14 +7,19 @@ import { supabase } from "@/integrations/supabase/client";
 export const BRAND_LOGO_BUCKET = "customer-gallery";
 export const BRAND_LOGO_PATH = "brand-identity/galbano-logo";
 
+let faviconVersion: number | null = null;
+
 export function getBrandLogoUrl() {
   return supabase.storage.from(BRAND_LOGO_BUCKET).getPublicUrl(BRAND_LOGO_PATH).data.publicUrl;
 }
 
-/** Replace the favicon only when the centrally stored logo is available. */
-export function refreshBrandFavicon() {
+/** Reuse the stable favicon URL; add a cache-buster only after an explicit logo update. */
+export function refreshBrandFavicon(forceRefresh = false) {
   if (typeof document === "undefined") return;
-  const url = `${getBrandLogoUrl()}?v=${Date.now()}`;
+  if (forceRefresh) faviconVersion = Date.now();
+
+  const baseUrl = getBrandLogoUrl();
+  const url = faviconVersion === null ? baseUrl : `${baseUrl}?v=${faviconVersion}`;
   const probe = new Image();
   probe.onload = () => {
     let link = document.querySelector<HTMLLinkElement>('link[rel~="icon"]');
