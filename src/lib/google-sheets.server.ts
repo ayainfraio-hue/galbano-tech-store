@@ -5,7 +5,8 @@ type GoogleServiceAccount = {
   private_key: string;
 };
 
-type SheetValue = string | number | boolean | null;
+type SheetCell = string | number | boolean | null;
+type SheetValue = SheetCell | Record<string, unknown> | unknown[];
 
 let cachedToken: { value: string; expiresAt: number } | undefined;
 
@@ -92,12 +93,50 @@ function quoteTab(tab: string): string {
   return `'${tab.replace(/'/g, "''")}'`;
 }
 
+function toSheetCell(value: SheetValue): SheetCell {
+  if (value == null) return "";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+  return JSON.stringify(value);
+}
+
 export type SheetRow = Record<string, SheetValue>;
+
+type SpreadsheetMetadata = { sheets?: { properties?: { sheetId?: number; title?: string } }[] };
+
+/** Creates a missing tab and its header, but never clears or overwrites existing content. */
+export async function ensureSheetTab(tab: string, headers: string[]): Promise<void> {
+  if (!headers.length || headers.some((header) => !header.trim())) {
+    throw new Error(`A aba ${tab} precisa ter cabeçalhos válidos`);
+  }
+  const metadata = await sheetsRequest<SpreadsheetMetadata>("?fields=sheets.properties(sheetId,title)");
+  let sheet = metadata.sheets?.find((item) => item.properties?.title === tab);
+  if (!sheet) {
+    await sheetsRequest(":batchUpdate", {
+      method: "POST",
+      body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tab } } }] }),
+    });
+    sheet = { properties: { title: tab } };
+  }
+
+  const range = encodeURIComponent(`${quoteTab(tab)}!A:ZZ`);
+  const current = await sheetsRequest<{ values?: SheetCell[][] }>(`/values/${range}`);
+  const existingHeaders = current.values?.[0]?.map(String) ?? [];
+  if (!existingHeaders.length) {
+    await sheetsRequest(`/values/${encodeURIComponent(`${quoteTab(tab)}!A1`)}?valueInputOption=RAW`, {
+      method: "PUT",
+      body: JSON.stringify({ values: [headers] }),
+    });
+    return;
+  }
+  if (existingHeaders.length !== headers.length || existingHeaders.some((value, index) => value !== headers[index])) {
+    throw new Error(`A aba "${tab}" já existe com cabeçalhos diferentes. Nenhum dado foi alterado.`);
+  }
+}
 
 /** Reads a tab using its first row as column names. */
 export async function readSheetRows(tab: string): Promise<SheetRow[]> {
   const range = encodeURIComponent(`${quoteTab(tab)}!A:ZZ`);
-  const result = await sheetsRequest<{ values?: SheetValue[][] }>(`/values/${range}`);
+  const result = await sheetsRequest<{ values?: SheetCell[][] }>(`/values/${range}`);
   const [headers = [], ...rows] = result.values ?? [];
   return rows
     .filter((row) => row.some((value) => value !== "" && value !== null))
@@ -108,12 +147,11 @@ export async function readSheetRows(tab: string): Promise<SheetRow[]> {
 export async function appendSheetRows(tab: string, rows: SheetRow[]): Promise<void> {
   if (!rows.length) return;
   const range = encodeURIComponent(`${quoteTab(tab)}!A:ZZ`);
-  const current = await sheetsRequest<{ values?: SheetValue[][] }>(`/values/${range}`);
+  const current = await sheetsRequest<{ values?: SheetCell[][] }>(`/values/${range}`);
   const headers = current.values?.[0]?.map(String) ?? [];
   if (!headers.length) throw new Error(`A aba ${tab} não possui cabeçalho`);
-  const values = rows.map((row) => headers.map((header) => row[header] ?? ""));
-  const appendRange = encodeURIComponent(`${quoteTab(tab)}!A:ZZ`);
-  await sheetsRequest(`/values/${appendRange}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
+  const values = rows.map((row) => headers.map((header) => toSheetCell(row[header])));
+  await sheetsRequest(`/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
     method: "POST",
     body: JSON.stringify({ values }),
   });
@@ -123,11 +161,11 @@ export async function appendSheetRows(tab: string, rows: SheetRow[]): Promise<vo
 export async function updateSheetRow(tab: string, rowNumber: number, row: SheetRow): Promise<void> {
   if (!Number.isInteger(rowNumber) || rowNumber < 2) throw new Error("Número de linha inválido");
   const range = encodeURIComponent(`${quoteTab(tab)}!A${rowNumber}:ZZ${rowNumber}`);
-  const current = await sheetsRequest<{ values?: SheetValue[][] }>(`/values/${encodeURIComponent(`${quoteTab(tab)}!A:ZZ`)}`);
+  const current = await sheetsRequest<{ values?: SheetCell[][] }>(`/values/${encodeURIComponent(`${quoteTab(tab)}!A:ZZ`)}`);
   const headers = current.values?.[0]?.map(String) ?? [];
   if (!headers.length) throw new Error(`A aba ${tab} não possui cabeçalho`);
   await sheetsRequest(`/values/${range}?valueInputOption=RAW`, {
     method: "PUT",
-    body: JSON.stringify({ values: [headers.map((header) => row[header] ?? "")] }),
+    body: JSON.stringify({ values: [headers.map((header) => toSheetCell(row[header]))] }),
   });
 }
