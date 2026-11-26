@@ -92,7 +92,7 @@ export const listStoreProducts = createServerFn({ method: "GET" }).handler(async
   const client = createStoreProductsClient();
   const { data, error } = await client
     .from("products")
-    .select("*")
+    .select("id,slug,name,brand,sku,category,image_url,price,old_price,rating,rating_count,badge,tags,short_description,description,specs,stock,active,sort_order")
     .eq("active", true)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
