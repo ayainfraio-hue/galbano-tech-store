@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckoutDialog } from "@/components/store/CheckoutDialog";
 import { getCategory, getProduct } from "@/data/catalog";
 import { productsQueryOptions, useProducts } from "@/lib/products";
+import { getStoreProductGallery } from "@/lib/products.functions";
 import { discountPercent, formatBRL } from "@/lib/pricing";
 
 export const Route = createFileRoute("/produto/$slug")({
@@ -20,7 +21,14 @@ export const Route = createFileRoute("/produto/$slug")({
     const products = await context.queryClient.ensureQueryData(productsQueryOptions);
     const product = getProduct(products, params.slug);
     if (!product) throw notFound();
-    return { product };
+    const images = await getStoreProductGallery({ data: { slug: params.slug } });
+    return {
+      product: {
+        ...product,
+        image: images[0] ?? product.image,
+        images: images.length > 0 ? images : [product.image],
+      },
+    };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Produto indisponível — Gálbano Tech" }, { name: "robots", content: "noindex" }] };
@@ -52,7 +60,9 @@ export const Route = createFileRoute("/produto/$slug")({
 function ProductPage() {
   const { product: loaded } = Route.useLoaderData();
   const products = useProducts();
-  const product = getProduct(products, loaded.slug) ?? loaded;
+  const currentProduct = getProduct(products, loaded.slug) ?? loaded;
+  // Keep the gallery resolved by the detail loader; the shared listing query only carries cover images.
+  const product = { ...currentProduct, image: loaded.image, images: loaded.images };
   const [qty, setQty] = useState(1);
   const [activeImage, setActiveImage] = useState(product.image);
   useEffect(() => setActiveImage(product.image), [product.image]);
