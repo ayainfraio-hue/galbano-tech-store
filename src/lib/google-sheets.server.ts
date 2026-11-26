@@ -150,7 +150,7 @@ export async function appendSheetRows(tab: string, rows: SheetRow[]): Promise<vo
   const current = await sheetsRequest<{ values?: SheetCell[][] }>(`/values/${range}`);
   const headers = current.values?.[0]?.map(String) ?? [];
   if (!headers.length) throw new Error(`A aba ${tab} não possui cabeçalho`);
-  const values = rows.map((row) => headers.map((header) => toSheetCell(row[header])));
+  const values = rows.map((row) => headers.map((header) => toSheetCell(row[header] ?? null)));
   await sheetsRequest(`/values/${range}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
     method: "POST",
     body: JSON.stringify({ values }),
@@ -166,6 +166,6 @@ export async function updateSheetRow(tab: string, rowNumber: number, row: SheetR
   if (!headers.length) throw new Error(`A aba ${tab} não possui cabeçalho`);
   await sheetsRequest(`/values/${range}?valueInputOption=RAW`, {
     method: "PUT",
-    body: JSON.stringify({ values: [headers.map((header) => toSheetCell(row[header]))] }),
+    body: JSON.stringify({ values: [headers.map((header) => toSheetCell(row[header] ?? null))] }),
   });
 }
