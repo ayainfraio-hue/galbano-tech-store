@@ -65,7 +65,7 @@ async function resolveProductImageUrls(
     } else {
       for (const item of data ?? []) {
         if (!item.signedUrl) {
-          console.error("product image signing failed:", item.path, item.error?.message);
+          console.error("product image signing failed:", item.path, item.error);
           continue;
         }
         resolved.set(item.path, item.signedUrl);
