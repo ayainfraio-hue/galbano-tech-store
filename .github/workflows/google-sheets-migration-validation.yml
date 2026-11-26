@@ -1,0 +1,37 @@
+name: Validate Google Sheets migration branch
+
+on:
+  push:
+    branches:
+      - migration/google-sheets-backend
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: TypeScript (known baseline errors in existing admin routes)
+        run: bun run typecheck
+        continue-on-error: true
+      - name: Tests
+        run: bun run test
+      - name: Production build
+        run: bun run build

@@ -1,15 +1,18 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { AlertTriangle, BadgeCheck, ClipboardList, Package, Receipt, Wallet } from "lucide-react";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import { AlertTriangle, BadgeCheck, ClipboardList, Package, Receipt, Wallet, Database, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, Panel, StatusBadge, formatDateTime } from "@/components/admin/AdminUi";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOrdersInRange } from "@/lib/admin-orders";
 import { defaultDateFilter, formatRange, getDateRange, type DateFilter } from "@/lib/date-range";
 import { averageTicket, confirmedSales, revenue } from "@/lib/orders";
 import { useStoreSettings } from "@/lib/store-content";
+import { migrateSupabaseDataToSheets } from "@/lib/migration.functions";
+import { toast } from "sonner";
 import { formatBRL } from "@/lib/pricing";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
@@ -29,6 +32,16 @@ function Dashboard() {
   const settings = useStoreSettings().data;
   // Sempre abre em "Hoje", calculado com a data local no momento em que a página abre.
   const [filter, setFilter] = useState<DateFilter>(() => defaultDateFilter());
+  const [migrationReport, setMigrationReport] = useState<Awaited<ReturnType<typeof migrateSupabaseDataToSheets>> | null>(null);
+  const migration = useMutation({
+    mutationFn: () => migrateSupabaseDataToSheets(),
+    onSuccess: (result) => {
+      setMigrationReport(result);
+      if (result.success) toast.success("Cópia de segurança para o Google Planilhas concluída.");
+      else toast.warning("Cópia concluída com divergências. Confira o relatório.");
+    },
+    onError: (error: Error) => toast.error(error.message || "Não foi possível copiar os dados."),
+  });
   const range = useMemo(() => getDateRange(filter), [filter]);
 
   const orders = useQuery({
@@ -66,6 +79,43 @@ function Dashboard() {
         description="Pedidos, vendas e estoque da loja no período selecionado."
         actions={<DateRangeFilter value={filter} onChange={setFilter} />}
       />
+      <Panel className="mb-6 border border-amber-300/60 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <Database className="mt-0.5 h-5 w-5 shrink-0 text-gold" />
+            <div>
+              <h2 className="font-semibold">Cópia inicial para o Google Planilhas</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Copia os registros atuais sem apagar nem substituir dados. A loja continua usando o banco atual até a migração ser validada.
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="gold"
+            disabled={migration.isPending}
+            onClick={() => {
+              if (confirm("Copiar os dados atuais para o Google Planilhas? Nada será apagado do banco atual.")) migration.mutate();
+            }}
+          >
+            {migration.isPending ? <><Loader2 className="animate-spin" /> Copiando…</> : "Copiar dados"}
+          </Button>
+        </div>
+        {migrationReport && (
+          <div className="mt-4 border-t border-border pt-3">
+            <p className="text-sm font-medium">{migrationReport.message}</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {migrationReport.report.map((item) => (
+                <div key={item.table} className="rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                  <p className="font-semibold">{item.table}</p>
+                  <p>Origem: {item.source} · Copiados: {item.inserted} · Já existiam: {item.alreadyPresent}</p>
+                  {item.conflicts > 0 && <p className="text-destructive">Divergências: {item.conflicts}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Panel>
       {orders.error && (
         <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           Não foi possível carregar os pedidos do período.
