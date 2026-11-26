@@ -4,6 +4,7 @@ import { AlertTriangle, BadgeCheck, ClipboardList, Package, Receipt, Wallet, Dat
 import { useMemo, useState } from "react";
 
 import { DateRangeFilter } from "@/components/admin/DateRangeFilter";
+import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, Panel, StatusBadge, formatDateTime } from "@/components/admin/AdminUi";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOrdersInRange } from "@/lib/admin-orders";
