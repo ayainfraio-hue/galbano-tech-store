@@ -221,6 +221,36 @@ function parseSpecs(text: string): [string, string][] {
     .map(([k = "", v = ""]) => [k.slice(0, 60), v.slice(0, 200)] as [string, string]);
 }
 
+async function optimizeProductImage(file: File): Promise<File> {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return file;
+
+  let bitmap: ImageBitmap | undefined;
+  try {
+    bitmap = await createImageBitmap(file);
+    const maxDimension = 1600;
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.type === "image/webp" && file.size < 180 * 1024) return file;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.84));
+    if (!blob || blob.size >= file.size) return file;
+
+    const baseName = file.name.replace(/\.[^.]+$/, "") || "product-image";
+    return new File([blob], `${baseName}.webp`, { type: "image/webp", lastModified: file.lastModified });
+  } catch {
+    // Keep the original when the browser cannot decode or convert the image.
+    return file;
+  } finally {
+    bitmap?.close();
+  }
+}
+
 function ProductForm({ product, onClose }: { product: ProductRow | "new" | null; onClose: () => void }) {
   const queryClient = useQueryClient();
   const isNew = product === "new";
@@ -251,11 +281,16 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
   useEffect(() => {
     let cancelled = false;
     async function loadPreviews() {
-      const entries = await Promise.all(form.gallery_urls.map(async (path) => {
-        if (/^https?:\/\//i.test(path)) return [path, path] as const;
-        const { data } = await supabase.storage.from("product-images").createSignedUrl(path, 60 * 60);
-        return [path, data?.signedUrl ?? ""] as const;
-      }));
+      const localPaths = [...new Set(form.gallery_urls.filter((path) => !/^https?:\/\//i.test(path)))];
+      const { data, error } = localPaths.length > 0
+        ? await supabase.storage.from("product-images").createSignedUrls(localPaths, 60 * 60)
+        : { data: [], error: null };
+      if (error) console.error("product preview signing failed:", error.message);
+      const signed = new Map((data ?? []).filter((item) => item.signedUrl).map((item) => [item.path, item.signedUrl]));
+      const entries = form.gallery_urls.map((path) => [
+        path,
+        /^https?:\/\//i.test(path) ? path : signed.get(path) ?? "",
+      ] as const);
       if (!cancelled) setImagePreviews(Object.fromEntries(entries));
     }
     void loadPreviews();
@@ -271,9 +306,15 @@ function ProductForm({ product, onClose }: { product: ProductRow | "new" | null;
     const uploaded: string[] = [];
     try {
       for (const file of selected) {
-        const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const optimized = await optimizeProductImage(file);
+        const ext = optimized.type === "image/webp"
+          ? "webp"
+          : optimized.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
         const path = `products/${crypto.randomUUID()}.${ext}`;
-        const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+        const { error } = await supabase.storage.from("product-images").upload(path, optimized, {
+          contentType: optimized.type || file.type,
+          cacheControl: "31536000",
+        });
         if (error) throw error;
         uploaded.push(path);
       }

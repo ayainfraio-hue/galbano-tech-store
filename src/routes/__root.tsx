@@ -159,7 +159,12 @@ function RootComponent() {
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  useEffect(() => { refreshBrandFavicon(); }, []);
+  useEffect(() => {
+    refreshBrandFavicon();
+    const handleLogoUpdated = () => refreshBrandFavicon(true);
+    window.addEventListener("brand-logo-updated", handleLogoUpdated);
+    return () => window.removeEventListener("brand-logo-updated", handleLogoUpdated);
+  }, []);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
