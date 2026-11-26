@@ -101,13 +101,15 @@ function ProductPage() {
             alt={product.name}
             width={816}
             height={816}
+            loading="lazy"
+            decoding="async"
             className="mx-auto aspect-square w-full max-w-lg object-contain mix-blend-multiply"
           />
           {product.images.length > 1 && (
             <div className="mx-auto mt-4 flex max-w-lg flex-wrap justify-center gap-3">
               {product.images.map((image, index) => (
                 <button key={image} type="button" onClick={() => setActiveImage(image)} aria-label={`Ver foto ${index + 1}`} aria-pressed={activeImage === image} className={`h-16 w-16 overflow-hidden rounded-lg border bg-white p-1 transition ${activeImage === image ? "border-gold ring-2 ring-gold/30" : "border-border"}`}>
-                  <img src={image} alt={`${product.name} — foto ${index + 1}`} className="h-full w-full object-contain" />
+                  <img src={image} alt={`${product.name} — foto ${index + 1}`} loading="lazy" decoding="async" className="h-full w-full object-contain" />
                 </button>
               ))}
             </div>
